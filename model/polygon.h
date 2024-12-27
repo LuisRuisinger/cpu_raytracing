@@ -10,6 +10,9 @@
 #include "../util/vec3.h"
 #include "../bvh/aabb.h"
 #include "../util/ray.h"
+#include "../util/defines.h"
+
+C_GUARD_BEGINN()
 
 /**
  * Packed struct containing information about the shade of the triangle.
@@ -25,7 +28,7 @@ typedef struct Triangle_Shade_t {
     // 8 bytes
     u32 static_color;
     u32 shade_type;
-} __attribute__((packed, aligned(ALIGNMENT))) Triangle_Shade;
+} __attribute__((packed, aligned(ALIGNMENT_256))) Triangle_Shade;
 
 typedef enum Shade_t {
     FLAT       = 1 << 0,
@@ -66,12 +69,14 @@ typedef struct Triangle_t {
     // aligned to 32
     vec3f point_a;
     vec3f normal;
-} __attribute__((aligned(ALIGNMENT))) Triangle;
+} __attribute__((aligned(ALIGNMENT_256))) Triangle;
 
 
 
 
 
 void calc_surface_normal(Triangle *triangle);
+
+C_GUARD_END()
 
 #endif //SOFTWARE_RATYTRACING_POLYGON_H

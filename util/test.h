@@ -2,12 +2,16 @@
 // Created by Luis Ruisinger on 02.12.24.
 //
 
-#ifndef SOFTWARE_RATYTRACING_TEST_H
-#define SOFTWARE_RATYTRACING_TEST_H
+#ifndef SOFTWARE_RAYTRACING_TEST_H
+#define SOFTWARE_RAYTRACING_TEST_H
 
 #include <stdio.h>
 #include <string.h>
 #include <stdarg.h>
+
+#include "defines.h"
+
+C_GUARD_BEGINN()
 
 #define LOG_PREFIX(prefix)                                                             \
     do {                                                                              \
@@ -78,4 +82,6 @@ void log_strings(const char *str, ...) {
         fun()                    \
     }
 
-#endif //SOFTWARE_RATYTRACING_TEST_H
+C_GUARD_END()
+
+#endif //SOFTWARE_RAYTRACING_TEST_H

@@ -6,6 +6,9 @@
 #define SOFTWARE_RATYTRACING_DICT_H
 
 #include "dynamic_array.h"
+#include "../defines.h"
+
+C_GUARD_BEGINN()
 
 #define ENTRY(key_type, value_type) \
     struct { key_type key; value_type value; }
@@ -65,5 +68,7 @@
         }                                                                                         \
     }                                                                                             \
     while (0)
+
+C_GUARD_END()
 
 #endif //SOFTWARE_RATYTRACING_DICT_H

@@ -8,10 +8,12 @@
 #include "../util/vec3.h"
 #include "../util/ray.h"
 
+C_GUARD_BEGINN()
+
 typedef struct AABB_t {
     vec3f min;
     vec3f max;
-} __attribute__((aligned(ALIGNMENT))) AABB;
+} __attribute__((aligned(ALIGNMENT_256))) AABB;
 
 #define AABB_1(v_max) \
     (AABB) { .min = VEC3(0.0F), .max = v_max }
@@ -36,10 +38,20 @@ void translate_vec(AABB *aabb, vec3f vec);
 
 void translate_scalar(AABB *aabb, f32 scalar);
 
-bool single_aabb_aabb_intersection(const AABB *a, const AABB *b);
+bool aabb_aabb_intersection(const AABB *a, const AABB *b);
+bool ray_aabb_intersection(const Ray *ray, const AABB *aabb);
 
-bool single_ray_aabb_intersection(const Ray *ray, const AABB *aabb);
+#define AABB_INTERSECTION(a, b) \
+    _Generic((b), AABB *: aabb_aabb_intersection, Ray *: ray_aabb_intersection)(a, b)
 
-__m256 dual_ray_aabb_intersection(const Ray *ray, const AABB aabb[2]);
+vec3f aabb_aabb_intersection_distance(const AABB *a, const AABB *b);
+vec3f ray_aabb_intersection_distance(const Ray *ray, const AABB *aabb);
+
+#define AABB_INTERSECTION_DISTANCE(a, b) \
+    _Generic((b),                        \
+        AABB *: aabb_aabb_intersection_distance, \
+        Ray *: ray_aabb_intersection_distance)(a, b)
+
+C_GUARD_END()
 
 #endif //SOFTWARE_RATYTRACING_AABB_H

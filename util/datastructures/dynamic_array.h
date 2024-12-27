@@ -10,6 +10,8 @@
 
 #include "../defines.h"
 
+C_GUARD_BEGINN()
+
 // inspired by the C Code Archive Network - Dynamic Array implementation
 #define ARRAY(type) \
     struct { type *mem; usize capacity; usize size; }
@@ -84,15 +86,15 @@ typedef ARRAY(signed char)   schar_array;
 #ifndef ARRAY_REALLOC
     #define ARRAY_REALLOC(arr, n_size)                                                            \
         do {                                                                                      \
-            usize align = sizeof(*(arr).mem);                                                    \
-            usize arr_size = MIN(n_size, (arr).size);                                            \
+            usize align = sizeof(*(arr).mem);                                                     \
+            usize arr_size = MIN(n_size, (arr).size);                                             \
                                                                                                   \
-            (arr).size = arr_size;                                                               \
+            (arr).size = arr_size;                                                                \
             (arr).capacity = n_size;                                                              \
                                                                                                   \
-            void *n_ptr = aligned_alloc(align, align * n_size);                                   \
-            memcpy(n_ptr, (arr).mem, (arr).size);                                               \
-            free((arr).mem);                                                                     \
+            void *n_ptr = (u8 *) aligned_alloc(align, align * n_size);                            \
+            memcpy(n_ptr, (arr).mem, (arr).size);                                                 \
+            free((arr).mem);                                                                      \
         }                                                                                         \
         while (0)
 #endif
@@ -103,8 +105,8 @@ typedef ARRAY(signed char)   schar_array;
 #define ARRAY_INIT(arr, init)                                                                     \
     do {                                                                                          \
         ARRAY_ALLOC(arr, init);                                                                   \
-        (arr).capacity = init;                                                                   \
-        (arr).size = 0;                                                                          \
+        (arr).capacity = init;                                                                    \
+        (arr).size = 0;                                                                           \
     }                                                                                             \
     while (0)
 
@@ -113,7 +115,7 @@ typedef ARRAY(signed char)   schar_array;
 
 #define ARRAY_RESIZE(arr, n_size)                                                                 \
     do {                                                                                          \
-        if (n_size != (arr).capacity) {                                                          \
+        if (n_size != (arr).capacity) {                                                           \
             ARRAY_REALLOC(arr, n_size);                                                           \
         }                                                                                         \
     }                                                                                             \
@@ -121,7 +123,7 @@ typedef ARRAY(signed char)   schar_array;
 
 #define ARRAY_RESERVE(arr, n_size)                                                                \
     do {                                                                                          \
-        if (n_size > (arr).capacity) {                                                           \
+        if (n_size > (arr).capacity) {                                                            \
             ARRAY_REALLOC(arr, n_size);                                                           \
         }                                                                                         \
     }                                                                                             \
@@ -129,7 +131,7 @@ typedef ARRAY(signed char)   schar_array;
 
 #define ARRAY_NEXT_ALLOC(arr, n_capacity)                                                         \
     do {                                                                                          \
-        usize n_size = ((arr).capacity | LEAST_ALLOC_SIZE)--;                                    \
+        usize n_size = ((arr).capacity | LEAST_ALLOC_SIZE)--;                                     \
         n_size |= n_size >> 1;                                                                    \
         n_size |= n_size >> 2;                                                                    \
         n_size |= n_size >> 4;                                                                    \
@@ -138,14 +140,14 @@ typedef ARRAY(signed char)   schar_array;
         n_size |= n_size >> 32;                                                                   \
         n_size++;                                                                                 \
                                                                                                   \
-        *(n_capacity) = n_size;                                                                     \
+        *(n_capacity) = n_size;                                                                   \
     }                                                                                             \
     while (0)
 
 #define ARRAY_GROWTH_RESIZE(arr, n_size)                                                          \
     do {                                                                                          \
-        if (n_size >= (arr).capacity * ARRAY_REALLOC_FACTOR) {                                   \
-            usize n_capacity = (arr).capacity << 1;                                              \
+        if (n_size >= (arr).capacity * ARRAY_REALLOC_FACTOR) {                                    \
+            usize n_capacity = (arr).capacity << 1;                                               \
                                                                                                   \
             ARRAY_RESIZE(arr, n_capacity);                                                        \
         }                                                                                         \
@@ -155,62 +157,62 @@ typedef ARRAY(signed char)   schar_array;
 #define ARRAY_APPEND(arr, v)                                                                      \
     do {                                                                                          \
         usize n_elements = sizeof(v) / sizeof(*v);                                                \
-        ARRAY_GROWTH_RESIZE(arr, (arr).size + n_elements - 1);                                   \
-        memcpy((arr).mem + (arr).size, v, n_elements);                                          \
-        (arr).size += n_elements;                                                                \
+        ARRAY_GROWTH_RESIZE(arr, (arr).size + n_elements - 1);                                    \
+        memcpy((arr).mem + (arr).size, v, n_elements);                                            \
+        (arr).size += n_elements;                                                                 \
     }                                                                                             \
     while (0)
 
 #define ARRAY_PREPEND(arr, v)                                                                     \
     do {                                                                                          \
         usize n_elements = sizeof(v) / sizeof(*v);                                                \
-        ARRAY_GROWTH_RESIZE(arr, (arr).size + n_elements - 1);                                   \
-        memmove((arr).mem + n_elements, (arr).mem, (arr).size);                                \
-        memcpy((arr).mem, v, n_elements);                                                        \
-        (arr).size += n_elements;                                                                \
+        ARRAY_GROWTH_RESIZE(arr, (arr).size + n_elements - 1);                                    \
+        memmove((arr).mem + n_elements, (arr).mem, (arr).size);                                   \
+        memcpy((arr).mem, v, n_elements);                                                         \
+        (arr).size += n_elements;                                                                 \
     }                                                                                             \
     while (0)
 
 #define ARRAY_PUSH_BACK(arr, v)                                                                   \
     do {                                                                                          \
-        ARRAY_GROWTH_RESIZE((arr), (arr).size);                                                    \
-        ARRAY_ELEMENT((arr), (arr).size) = v;                                                      \
-        ++(arr).size;                                                                            \
+        ARRAY_GROWTH_RESIZE((arr), (arr).size);                                                   \
+        ARRAY_ELEMENT((arr), (arr).size) = v;                                                     \
+        ++(arr).size;                                                                             \
     }                                                                                             \
     while (0)
 
 #define ARRAY_PUSH_BACK_MULTIPLE(arr, ...)                                                        \
     do {                                                                                          \
-        __typeof__(*(arr).mem) tmp_arr[] = { __VA_ARGS__ };                                      \
+        __typeof__(*(arr).mem) tmp_arr[] = { __VA_ARGS__ };                                       \
         ARRAY_APPEND(arr, tmp_arr);                                                               \
     }                                                                                             \
     while (0)
 
 #define ARRAY_PUSH_FRONT(arr, v)                                                                  \
     do {                                                                                          \
-        ARRAY_GROWTH_RESIZE(arr, (arr).size);                                                    \
-        memmove((arr).mem + 1, (arr).mem, (arr).size);                                         \
+        ARRAY_GROWTH_RESIZE(arr, (arr).size);                                                     \
+        memmove((arr).mem + 1, (arr).mem, (arr).size);                                            \
         ARRAY_ELEMENT(arr, 0) = v;                                                                \
-        ++(arr).size;                                                                            \
+        ++(arr).size;                                                                             \
     }                                                                                             \
     while (0)
 
 #define ARRAY_PUSH_FRONT_MULTIPLE(arr, ...)                                                       \
     do {                                                                                          \
-        __typeof__(*(arr).mem) tmp_arr[] = { __VA_ARGS__ };                                      \
+        __typeof__(*(arr).mem) tmp_arr[] = { __VA_ARGS__ };                                       \
         ARRAY_PREPEND(arr, tmp_arr);                                                              \
     }                                                                                             \
     while (0)
 
 #define ARRAY_REMOVE(arr, i)                                                                      \
     do {                                                                                          \
-        if ((i) < (arr).size - 1) {                                                              \
+        if ((i) < (arr).size - 1) {                                                               \
             memmove(                                                                              \
                 &ARRAY_ELEMENT(arr, (i)), &ARRAY_ELEMENT(arr, (i) + 1),                           \
-                ((arr).size - 1 - (i)) * sizeof(*(arr).mem));                                   \
+                ((arr).size - 1 - (i)) * sizeof(*(arr).mem));                                     \
         }                                                                                         \
                                                                                                   \
-        --(arr).size;                                                                            \
+        --(arr).size;                                                                             \
     }                                                                                             \
     while (0)
 
@@ -228,6 +230,8 @@ typedef ARRAY(signed char)   schar_array;
 
 #define ARRAY_FOREACH_REVERSE(arr, i) \
     ARRAY_FOREACH_REVERSE_SUBRANGE(arr, i, (arr).size - 1, -1)
+
+C_GUARD_END()
 
 #endif //SOFTWARE_RATYTRACING_DYNAMIC_ARRAY_H
 

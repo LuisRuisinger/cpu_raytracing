@@ -7,6 +7,8 @@
 
 #include "defines.h"
 
+C_GUARD_BEGINN()
+
 typedef enum Direction_t {
     FORWARD, BACKWARD,
     LEFT, RIGHT,
@@ -21,5 +23,7 @@ void camera_destroy(Camera *cam);
 void camera_stringify(Camera *cam);
 void move(Camera *cam, Direction movement, f32 delta_time);
 void rotate(Camera *cam, f32 xpos, f32 ypos);
+
+C_GUARD_END()
 
 #endif //SOFTWARE_RATYTRACING_CAMERA_H

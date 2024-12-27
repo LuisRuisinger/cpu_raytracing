@@ -96,6 +96,8 @@ usize camera_size(void) {
 void move(Camera *cam, Direction dir, f32 dt) {
     f32 velocity = cam->ms_speed * dt;
 
+    fprintf(stdout, "%d\n", dir);
+
     switch (dir) {
         case FORWARD : cam->pos = add_vec(cam->pos, mul_scalar(cam->front, velocity)); break;
         case BACKWARD: cam->pos = sub_vec(cam->pos, mul_scalar(cam->front, velocity)); break;

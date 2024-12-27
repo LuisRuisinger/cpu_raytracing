@@ -141,7 +141,7 @@ f32 traverse(const BVH_Node *restrict ray, const BVH_Node *restrict node, Triang
 
         // retrieving the index of the smallest float
         u8 mask = (u8) _mm256_movemask_ps(_tmp_1);
-        u8 idx  = (u8) __builtin_clz(mask);
+        u8 idx = (u8) CPU_RAYTRACING_CLZ(mask);
 
         // because hit never gets tested and _tmp_3 contains the smallest float
         // which could be NO_INTERSECTION aka INFINITY
@@ -168,7 +168,7 @@ f32 traverse(const BVH_Node *restrict ray, const BVH_Node *restrict node, Triang
 
             // retrieving the index of the smallest float
             u8 mask = (u8) _mm256_movemask_ps(_tmp_2);
-            u8 idx  = (u8) __builtin_clz(mask);
+            u8 idx = (u8) CPU_RAYTRACING_CLZ(mask);
             scale = traverse(ray, &node->aabbs.children[idx], hit);
         }
     }

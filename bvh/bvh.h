@@ -9,6 +9,8 @@
 #include "../util/ray.h"
 #include "../model/polygon.h"
 
+C_GUARD_BEGINN()
+
 /**
  * Packed SOA representation of 8 triangles.
  */
@@ -25,7 +27,7 @@ typedef struct BVH_Triangles_t {
 
     // pointer to the attributes of each triangle
     Triangle *triangles;
-} __attribute__((aligned(ALIGNMENT))) BVH_Triangles;
+} __attribute__((aligned(ALIGNMENT_256))) BVH_Triangles;
 
 
 
@@ -43,7 +45,7 @@ typedef struct BVH_AABBs_t {
 
     // pointer to 8 children
     struct BVH_Node_t *children;
-} __attribute__((aligned(ALIGNMENT))) BVH_AABBs;
+} __attribute__((aligned(ALIGNMENT_256))) BVH_AABBs;
 
 
 
@@ -65,7 +67,7 @@ typedef struct BVH_Node_t {
     };
 
     u32 mask;
-} __attribute__((aligned(ALIGNMENT))) BVH_Node;
+} __attribute__((aligned(ALIGNMENT_256))) BVH_Node;
 
 #define IS_LEAF(node) \
     ((usize) (node)->mask & 0x1)
@@ -108,7 +110,7 @@ typedef struct BVH_Ray_T {
 
     // precomputed inverse direction
     __m256 _inv_dir[DIMENSIONS];
-} __attribute__((aligned(ALIGNMENT))) BVH_Ray;
+} __attribute__((aligned(ALIGNMENT_256))) BVH_Ray;
 
 #define BVH_RAY(org_vec, dir_vec, inv_dir_vec)                                                    \
     (BVH_Ray) {                                                                                   \
@@ -134,5 +136,7 @@ typedef struct BVH_Ray_T {
 
 
 void ray_child_nodes_intersection(const BVH_Ray *ray, const BVH_Node *node);
+
+C_GUARD_END()
 
 #endif //SOFTWARE_RATYTRACING_BVH_H

@@ -124,7 +124,6 @@ int main(void) {
 
         handle_keys(&state);
         camera_stringify(state.camera);
-
         SDL_UpdateWindowSurface(global_state.window);
     }
 

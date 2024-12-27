@@ -10,32 +10,12 @@
 #include <stdint.h>
 #include <math.h>
 
-typedef uint8_t  u8;
-typedef uint16_t u16;
-typedef uint32_t u32;
-typedef uint64_t u64;
+#include "build.h"
+#include "builtin.h"
 
-typedef int8_t   i8;
-typedef int16_t  i16;
-typedef int32_t  i32;
-typedef int64_t  i64;
-
-typedef float_t  f32;
-typedef double_t f64;
-
-typedef size_t   usize;
-typedef ssize_t  ssize;
-
-#if defined(__GNUC__) || defined(__clang__)
-    #define ALWAYS_INLINE __attribute__((always_inline))
-#elif defined(_MSC_VER)
-#define ALWAYS_INLINE __forceinline
-#else
-    #define ALWAYS_INLINE inline
-#endif
+C_GUARD_BEGINN()
 
 #define DIMENSIONS 3
-#define ALIGNMENT sizeof(__m256)
 
 #define MAX(x, y) \
     (((x) > (y)) ? (x) : (y))
@@ -52,6 +32,6 @@ typedef ssize_t  ssize;
 #define FAST_MOD_POW2(num, mod) \
     ((num) & (mod - 1))
 
-#define LAMBDA()
+C_GUARD_END()
 
 #endif //SOFTWARE_RATYTRACING_DEFINES_H

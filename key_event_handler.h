@@ -7,6 +7,8 @@
 
 #include "util/defines.h"
 
+C_GUARD_BEGINN()
+
 typedef struct State_t State;
 typedef struct Function_t {
     void (* fun)(State *);
@@ -24,5 +26,7 @@ void register_action(KeyEvent event, u32 key, Function fun);
 
 typedef struct KeyEventHandler_t KeyEventHandler;
 extern KeyEventHandler key_event_handler;
+
+C_GUARD_END()
 
 #endif //SOFTWARE_RATYTRACING_KEY_EVENT_HANDLER_H

@@ -6,6 +6,9 @@
 #define SOFTWARE_RATYTRACING_COLOR_H
 
 #include "vec3.h"
+#include "defines.h"
+
+C_GUARD_BEGINN()
 
 static ALWAYS_INLINE u32 vec3f_color_to_u32_color(vec3f color) {
     return
@@ -22,5 +25,7 @@ static ALWAYS_INLINE vec3f u32_color_to_vec3f_color(u32 color) {
 
     return VEC3(x, y, z);
 }
+
+C_GUARD_END()
 
 #endif //SOFTWARE_RATYTRACING_COLOR_H

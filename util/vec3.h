@@ -2,14 +2,15 @@
 // Created by Luis Ruisinger on 24.11.24.
 //
 
-#ifndef SOFTWARE_RATYTRACING_VEC3_H
-#define SOFTWARE_RATYTRACING_VEC3_H
+#ifndef SOFTWARE_RAYTRACING_VEC3_H
+#define SOFTWARE_RAYTRACING_VEC3_H
 
-#include <immintrin.h>
 #include <math.h>
 #include <stdatomic.h>
 
 #include "defines.h"
+
+C_GUARD_BEGINN()
 
 typedef struct vec3f_t {
     __m128 vec;
@@ -98,4 +99,6 @@ vec3f refract(vec3f i, vec3f n, f32 eta);
 
 vec3f reflect(vec3f i, vec3f n);
 
-#endif //SOFTWARE_RATYTRACING_VEC3_H
+C_GUARD_END()
+
+#endif //SOFTWARE_RAYTRACING_VEC3_H

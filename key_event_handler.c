@@ -28,19 +28,13 @@ void key_event_handler_init(void) {
 void lock_key(u32 key, State *state) {
     ARRAY_TYPEOF(key_event_handler.on_pre) *pair = NULL;
     ARRAY_FOREACH(key_event_handler.on_pre, pair) {
-        fprintf(stdout, "%d\n", FIRST(*pair));
-
         if (FIRST(*pair) == key) {
             SECOND(*pair).fun(state);
-
-            fprintf(stdout, "found function\n");
             break;
         }
     }
 
-    fprintf(stdout, "run lock key\n");
-
-    u64 bit = FAST_MOD_POW2(key, 64);
+    u64 bit = 1ULL << FAST_MOD_POW2(key, 64);
     key_event_handler.bitmap[key > 63] |= bit;
 }
 
@@ -53,7 +47,7 @@ void release_key(u8 key, State *state) {
         }
     }
 
-    u64 bit = FAST_MOD_POW2(key, 64);
+    u64 bit = 1ULL << FAST_MOD_POW2(key, 64);
     key_event_handler.bitmap[key > 63] &= ~bit;
 }
 
@@ -61,7 +55,7 @@ void handle_keys(State *state) {
     ARRAY_TYPEOF(key_event_handler.on_rep) *pair = NULL;
     ARRAY_FOREACH(key_event_handler.on_rep, pair) {
         u32 key = FIRST(*pair);
-        u64 bit = FAST_MOD_POW2(key, 64);
+        u64 bit = 1ULL << FAST_MOD_POW2(key, 64);
 
         if (key_event_handler.bitmap[key > 63] & bit) {
             SECOND(*pair).fun(state);

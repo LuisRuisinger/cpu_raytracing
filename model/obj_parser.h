@@ -11,4 +11,8 @@
 #include "../util/datastructures/dynamic_array.h"
 #include "../util/defines.h"
 
+C_GUARD_BEGINN()
+
 i32 parse(const char *file, ARRAY(Triangle) *res);
+
+C_GUARD_END()
