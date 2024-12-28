@@ -54,12 +54,15 @@
 #if defined(__GNUC__) && !defined(__clang__)
     #define CPU_RAYTRACING_GNUC __GNUC__
     #define ALWAYS_INLINE __attribute__((always_inline))
+    #define HAS_TYPEOF
 #elif defined(__GNUC__)
     #define CPU_RAYTRACING_GNUC_CLANG
     #define ALWAYS_INLINE __attribute__((always_inline))
+    #define HAS_TYPEOF
 #elif defined(__clang__)
     #define CPU_RAYTRACING_CLANG __clang_major__
     #define ALWAYS_INLINE __attribute__((always_inline))
+    #define HAS_TYPEOF
 #elif defined(_MSC_VER)
     #define CPU_RAYTRACING_MSC _MSC_VER
     #define ALWAYS_INLINE __forceinline

@@ -152,6 +152,16 @@ typedef ssize_t  ssize;
         _Generic((x), u8: cr_clz_u8, u16: cr_clz_u16, u32: cr_clz_u32, u64: cr_clz_u64)(x)
 #endif
 
+#if defined(CPU_RAYTRACING_GNUC_CLANG) && CPU_RAYTRACING_HAS_BUILTIN(__builtin_expect)
+    #define LIKELY(stmt)   __builtin_expect(stmt, 1)
+    #define UNLIKELY(stmt) __builtin_expect(stmt, 0)
+#else
+    #define LIKELY(stmt)   (stmt)
+    #define UNLIKELY(stmt) (!(stmt))
+#endif
+
+
+
 C_GUARD_END()
 
 #endif //CPU_RAYTRACING_BUILTIN_H

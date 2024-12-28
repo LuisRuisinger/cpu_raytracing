@@ -5,9 +5,10 @@
 #include "key_event_handler.h"
 #include "util/datastructures/dynamic_array.h"
 #include "util/datastructures/pair.h"
+#include "util/datastructures/bitmap.h"
 
 typedef struct KeyEventHandler_t {
-    u64 bitmap[2];
+    BITMAP(bitmap, 128);
 
     ARRAY(PAIR(u32, Function)) on_pre;
     ARRAY(PAIR(u32, Function)) on_rel;
@@ -17,8 +18,7 @@ typedef struct KeyEventHandler_t {
 KeyEventHandler key_event_handler;
 
 void key_event_handler_init(void) {
-    key_event_handler.bitmap[0] = 0ULL;
-    key_event_handler.bitmap[1] = 0ULL;
+    bitmap_zero(key_event_handler.bitmap, 128);
 
     ARRAY_INIT(key_event_handler.on_pre, 32);
     ARRAY_INIT(key_event_handler.on_rep, 32);
@@ -34,8 +34,7 @@ void lock_key(u32 key, State *state) {
         }
     }
 
-    u64 bit = 1ULL << FAST_MOD_POW2(key, 64);
-    key_event_handler.bitmap[key > 63] |= bit;
+    bitmap_set_bit(key_event_handler.bitmap, key);
 }
 
 void release_key(u8 key, State *state) {
@@ -47,8 +46,7 @@ void release_key(u8 key, State *state) {
         }
     }
 
-    u64 bit = 1ULL << FAST_MOD_POW2(key, 64);
-    key_event_handler.bitmap[key > 63] &= ~bit;
+    bitmap_clear_bit(key_event_handler.bitmap, key);
 }
 
 void handle_keys(State *state) {
@@ -57,7 +55,7 @@ void handle_keys(State *state) {
         u32 key = FIRST(*pair);
         u64 bit = 1ULL << FAST_MOD_POW2(key, 64);
 
-        if (key_event_handler.bitmap[key > 63] & bit) {
+        if (bitmap_test_bit(key_event_handler.bitmap, key)) {
             SECOND(*pair).fun(state);
         }
     }
