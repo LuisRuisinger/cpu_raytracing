@@ -71,6 +71,9 @@
     #define PRINT_FMT(pos_fmt, pos_arg)
 #endif
 
+// e.g. not working on widows
+#define __FILENAME__ (strrchr(__FILE__, '/') ? strrchr(__FILE__, '/') + 1 : __FILE__)
+
 // architecture
 #if defined(__x86_64__)
     #define CPU_RAYTRACING_X86

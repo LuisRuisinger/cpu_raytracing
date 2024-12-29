@@ -79,6 +79,7 @@ void move_down    (State *state) { move(state->camera, DOWN, state->deltatime); 
 int main(void) {
     init(DEFAULT_WIDTH, DEFAULT_HEIGHT);
     key_event_handler_init();
+    log_handler_init();
 
     State state = {
             .deltatime = 1.0F,
@@ -125,7 +126,7 @@ int main(void) {
         }
 
         handle_keys(&state);
-        //camera_stringify(state.camera);
+        camera_stringify(state.camera);
         SDL_UpdateWindowSurface(global_state.window);
     }
 

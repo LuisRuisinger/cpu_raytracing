@@ -4,8 +4,9 @@
 
 #include <assert.h>
 
-#include "camera.h"
-#include "vec3.h"
+#include "../util/camera.h"
+#include "../util/vec3.h"
+#include "../util/fmt.h"
 
 #define MAX_PITCH   89.0F
 #define MIN_PITCH   (-89.0F)
@@ -84,8 +85,8 @@ void camera_destroy(Camera *cam) {
 }
 
 void camera_stringify(Camera *cam) {
-    fprintf(stdout,
-            "[%.3f %.3f %.3f] pitch: %.3f yaw: %.3f\n",
+    DEBUG_LOG(
+            "[%.3f %.3f %.3f] pitch: %.3f yaw: %.3f",
             GET_VEC_X(cam->pos), GET_VEC_Y(cam->pos), GET_VEC_Z(cam->pos), cam->pitch, cam->yaw);
 }
 
