@@ -53,7 +53,6 @@ void handle_keys(State *state) {
     ARRAY_TYPEOF(key_event_handler.on_rep) *pair = NULL;
     ARRAY_FOREACH(key_event_handler.on_rep, pair) {
         u32 key = FIRST(*pair);
-        u64 bit = 1ULL << FAST_MOD_POW2(key, 64);
 
         if (bitmap_test_bit(key_event_handler.bitmap, key)) {
             SECOND(*pair).fun(state);

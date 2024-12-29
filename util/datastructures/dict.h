@@ -22,9 +22,9 @@ C_GUARD_BEGINN()
         i32 (*cmp_fun) (type_0 *key_1, type_0 *key_2);                                            \
     }
 
-#define MAP_FUNC(type_0, type_1)                                                                       \
+#define MAP_FUNC(type_0, type_1)                                                                  \
     struct {                                                                                      \
-        ARRAY(ENTRY_FUNC(type_0, type_1)) entries;                                                     \
+        ARRAY(ENTRY_FUNC(type_0, type_1)) entries;                                                \
         i32 (*cmp_fun) (type_0 *key_1, type_0 *key_2);                                            \
     }
 

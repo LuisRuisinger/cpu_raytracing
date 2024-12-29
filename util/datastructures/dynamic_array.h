@@ -56,8 +56,8 @@ typedef ARRAY(signed char)   schar_array;
 #ifndef ARRAY_ALLOC
     #define ARRAY_ALLOC(arr, n_size)                                                              \
         do {                                                                                      \
-            usize align = sizeof(*(arr).mem);                                                    \
-            (arr).mem = aligned_alloc(align, align * n_size);                                    \
+            usize align = sizeof(*(arr).mem);                                                     \
+            (arr).mem = aligned_alloc(align, align * n_size);                                     \
         }                                                                                         \
         while (0)
 #endif

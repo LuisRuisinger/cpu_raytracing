@@ -8,6 +8,8 @@
 #include "key_event_handler.h"
 #include "util/datastructures/dynamic_array.h"
 #include "util/datastructures/pair.h"
+#include "util/fmt.h"
+#include "util/vec3.h"
 
 #define DEFAULT_WIDTH  680
 #define DEFAULT_HEIGHT 480
@@ -123,7 +125,7 @@ int main(void) {
         }
 
         handle_keys(&state);
-        camera_stringify(state.camera);
+        //camera_stringify(state.camera);
         SDL_UpdateWindowSurface(global_state.window);
     }
 
