@@ -46,6 +46,12 @@ ALWAYS_INLINE static void bitmap_set_bit(Bitmap *bitmap, u32 n) {
     BITMAP_DWORD(bitmap, n) |= BITMAP_DWORD_BIT(n);
 }
 
+ALWAYS_INLINE static void bitmap_set_bits(Bitmap *bitmap, u32 n, u32 cnt) {
+    for (usize i = 0; i < cnt; ++i) {
+        BITMAP_DWORD(bitmap, n + i) |= BITMAP_DWORD_BIT(n + i);
+    }
+}
+
 ALWAYS_INLINE static void bitmap_clear_bit(Bitmap *bitmap, u32 n) {
     BITMAP_DWORD(bitmap, n) &= ~BITMAP_DWORD_BIT(n);
 }
@@ -76,8 +82,20 @@ ALWAYS_INLINE static void bitmap_complement(Bitmap *dst, Bitmap *src, u32 cnt) {
     }
 }
 
+ALWAYS_INLINE static u32 bitmap_popcount(Bitmap *bitmap, u32 cnt) {
+    u32 popcnt = 0;
+
+    // TODO: abstract popcount (no guarantee this builtin exists)
+    for (usize i = 0; i < BITMAP_N_DWORDS(cnt); ++i) {
+        popcnt += __builtin_popcount(bitmap[i].dword);
+    }
+
+    return popcnt;
+}
+
 #define BITMAP_DEFINE_BINOP(name, op)                                                             \
-    ALWAYS_INLINE static void bitmap_##name(Bitmap *dst, Bitmap *a, Bitmap *b, u32 cnt) {         \
+    ALWAYS_INLINE static void bitmap_##name(                                                      \
+        Bitmap *dst, const Bitmap *a, const Bitmap *b, u32 cnt) {                                 \
         for (usize i = 0; i < BITMAP_N_DWORDS(cnt); ++i) {                                        \
             dst[i].dword = a[i].dword op b[i].dword;                                              \
         }                                                                                         \

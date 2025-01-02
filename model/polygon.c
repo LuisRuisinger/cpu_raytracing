@@ -12,7 +12,7 @@ static ALWAYS_INLINE __m256 calculate_edges_vec(const Triangle *triangle) {
     return _mm256_sub_ps(tmp_0, tmp_1);
 }
 
-void calc_surface_normal(Triangle *triangle) {
+void eval_surface_normal(Triangle *triangle) {
     __m256 edges_vec = calculate_edges_vec(triangle);
 
     // TODO: maybe swap around - im not quite sure about the order in intrinsic registers
@@ -27,3 +27,5 @@ void calc_surface_normal(Triangle *triangle) {
 
     _mm_store_ps((f32 *) &triangle->normal, tmp_4);
 }
+
+

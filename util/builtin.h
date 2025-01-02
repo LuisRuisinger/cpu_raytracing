@@ -31,7 +31,7 @@ typedef ssize_t  ssize;
 #if defined(CPU_RAYTRACING_X86)
 #if defined(__AVX2__) || defined(__AVX__)
     #include <immintrin.h>
-    #define CPU_RAYTRACING_AVX2
+    #define CPU_RAYTRACING_AVX
     #define ALIGNMENT_256 sizeof(__m256)
 #endif
 

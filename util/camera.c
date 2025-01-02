@@ -39,26 +39,17 @@ static void camera_update(Camera *cam) {
     f32 cosf_yaw = cosf(TO_RADIANS(cam->yaw));
     f32 cosf_pitch = cosf(TO_RADIANS(cam->pitch));
 
-    //fprintf(stdout, "%.2f, %.2f, %.2f\n", GET_VEC_X(cam->world_up), GET_VEC_Y(cam->world_up), GET_VEC_Z(cam->world_up));
-
     cam->front = VEC3(
             cosf_yaw * cosf_pitch,
             sinf(TO_RADIANS(cam->pitch)),
             sinf(TO_RADIANS(cam->yaw)) * cosf_pitch);
     cam->front = normalize(cam->front);
 
-    //fprintf(stdout, "%.2f, %.2f, %.2f\n", GET_VEC_X(cam->front), GET_VEC_Y(cam->front), GET_VEC_Z(cam->front));
-
     cam->right = cross(cam->front, cam->world_up);
     cam->right = normalize(cam->right);
 
-    //fprintf(stdout, "%.2f, %.2f, %.2f\n", GET_VEC_X(cam->right), GET_VEC_Y(cam->right), GET_VEC_Z(cam->right));
-
     cam->up = cross(cam->right, cam->front);
     cam->up = normalize(cam->up);
-
-    //fprintf(stdout, "%.2f, %.2f, %.2f\n", GET_VEC_X(cam->up), GET_VEC_Y(cam->up), GET_VEC_Z(cam->up));
-    //exit(-1);
 }
 
 Camera *camera_create(void) {

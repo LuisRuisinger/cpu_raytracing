@@ -27,16 +27,13 @@ typedef struct AABB_t {
     AABB_GET_MACRO(__VA_ARGS__, AABB_2, AABB_1)(__VA_ARGS__)
 
 void scale_vec(AABB *aabb, vec3f vec);
-
 void scale_scalar(AABB *aabb, f32 scalar);
-
 void scale_center_vec(AABB *aabb, vec3f vec);
-
 void scale_center_scalar(AABB *aabb, f32 scalar);
-
 void translate_vec(AABB *aabb, vec3f vec);
-
 void translate_scalar(AABB *aabb, f32 scalar);
+void aabb_grow_vec(AABB *aabb, vec3f v);
+void aabb_grow_aabb(AABB *aabb, const AABB *other);
 
 bool aabb_aabb_intersection(const AABB *a, const AABB *b);
 bool ray_aabb_intersection(const Ray *ray, const AABB *aabb);

@@ -4,7 +4,6 @@
 
 #include <string.h>
 #include "obj_parser.h"
-#include "../util/datastructures/dynamic_array.h"
 #include "../util/datastructures/dict.h"
 #include "../util/vec3.h"
 

@@ -5,8 +5,10 @@
 #ifndef SOFTWARE_RATYTRACING_BVH_H
 #define SOFTWARE_RATYTRACING_BVH_H
 
+#include "../util/datastructures/bitmap.h"
 #include "../util/vec3.h"
 #include "../util/ray.h"
+
 #include "../model/polygon.h"
 
 C_GUARD_BEGINN()
@@ -24,9 +26,6 @@ typedef struct BVH_Triangles_t {
     // first point of each triangle
     // split up in x, y and z
     __m256 _point_a[DIMENSIONS];
-
-    // pointer to the attributes of each triangle
-    Triangle *triangles;
 } __attribute__((aligned(ALIGNMENT_256))) BVH_Triangles;
 
 
@@ -42,9 +41,6 @@ typedef struct BVH_AABBs_t {
     // allows processing of 8 nodes aabb nodes at the same time
     __m256 _min[DIMENSIONS];
     __m256 _max[DIMENSIONS];
-
-    // pointer to 8 children
-    struct BVH_Node_t *children;
 } __attribute__((aligned(ALIGNMENT_256))) BVH_AABBs;
 
 
@@ -53,42 +49,40 @@ typedef struct BVH_AABBs_t {
 
 /**
  * Representation of a single BVH node.
- * Contains packed SOA representation of 8 aabb's it contains as children or
+ * Contains packed SOA representation of 8 aabb's it contains as node or
  * packed SOA representation of 8 triangles in which case it acts as a leaf of the BVH.
  */
 typedef struct BVH_Node_t {
+
+    // relative offset into a linear buffer containing bvh nodes
+    u32 packed_0;
+
+    // packed_1 other than packed_0 contains additional packed metadata like the amount
+    // of nodes this node has as children (or triangles).
+    // this information can become relevant for N-ary BVHs where N > 2.
+    // also this packed u32 contains a bit indicating if this bvh node represents a leaf.
+    u32 packed_1;
+
     union {
-
-        // pointer to 8 aabbs
-        BVH_AABBs aabbs;
-
-        // pointer to 8 leaves
+        BVH_AABBs     aabbs;
         BVH_Triangles triangles;
     };
-
-    u32 mask;
 } __attribute__((aligned(ALIGNMENT_256))) BVH_Node;
 
-#define IS_LEAF(node) \
-    ((usize) (node)->mask & 0x1)
+#define LEAF_MASK (1UL << 3)
+#define NODE_CNT_MASK 7UL
+
+#define GET_LEAF(node) \
+    (!!((node)->mask_1 & LEAF_MASK))
 
 #define SET_LEAF(node) \
-    ((usize) (node)->mask | 0x1)
+    ((node)->mask_1 |= LEAF_MASK)
 
-#define GET_CHILDREN(node) \
-    ((node)->aabbs.children)
+#define GET_NODE_CNT(node) \
+    ((node)->mask_1 & NODE_CNT_MASK)
 
-#define SET_CHILDREN(node, ptr) \
-    do { (node)->aabbs.children = (ptr); } while (0)
-
-#define GET_TRIANGLES(node) \
-    ((node)->triangles.triangles)
-
-#define SET_TRIANGLES(node, ptr)           \
-    do {                                   \
-        (node)->triangles.triangles = ptr; \
-        (node)->mask |= 0x1;               \
-    } while (0)
+#define SET_NODE_CNT(node, cnt) \
+    ((node)->mask_1 = ((node)->mask_1 & ~NODE_CNT_MASK) | (cnt & NODE_CNT_MASK)
 
 
 
@@ -134,7 +128,7 @@ typedef struct BVH_Ray_T {
 
 
 
-
+f32 eval_sah_splitplane(const BVH_Node *, u32 axis, f32 pos);
 void ray_child_nodes_intersection(const BVH_Ray *ray, const BVH_Node *node);
 
 C_GUARD_END()

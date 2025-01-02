@@ -71,11 +71,14 @@ typedef struct Triangle_t {
     vec3f normal;
 } __attribute__((aligned(ALIGNMENT_256))) Triangle;
 
+#define TRIANGLE_CENTROID(tri) \
+    mul_scalar(add_vec(add_vec((tri).point_b, (tri).point.c), (tri).point.a)), 0.3333F)
 
 
 
+void eval_surface_normal(Triangle *triangle);
+void eval_centroid(Triangle *triangle);
 
-void calc_surface_normal(Triangle *triangle);
 
 C_GUARD_END()
 

@@ -67,6 +67,9 @@ typedef struct vec2f_t {
     }                                                                                             \
     while (0)
 
+#define SIGN(v) \
+    (-((GET_VEC_X(v) < 0) || (GET_VEC_Y(v) < 0) || (GET_VEC_Z(v) < 0)))
+
 vec3f add_scalar(vec3f a, f32 scalar);
 
 vec3f add_vec(vec3f a, vec3f b);

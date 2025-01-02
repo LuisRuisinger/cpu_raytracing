@@ -231,6 +231,9 @@ typedef ARRAY(signed char)   schar_array;
 #define ARRAY_FOREACH_REVERSE(arr, i) \
     ARRAY_FOREACH_REVERSE_SUBRANGE(arr, i, (arr).size - 1, -1)
 
+#define ARRAY_SORT(arr, cmp) \
+    qsort((arr).mem, (arr).size, sizeof(ARRAY_TYPEOF(arr)), cmp)
+
 C_GUARD_END()
 
 #endif //SOFTWARE_RATYTRACING_DYNAMIC_ARRAY_H

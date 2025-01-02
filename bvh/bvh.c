@@ -3,6 +3,7 @@
 //
 
 #include "bvh.h"
+#include "../global.h"
 
 #define DEPTH 16
 #define NO_INTERSECTION INFINITY
@@ -124,7 +125,7 @@ static ALWAYS_INLINE __m256 _mm256_broadcastminss_ps(__m256 _a) {
  *         Calculates a possible intersection for a single ray.
  * @param  ray  The ray containing origin, a normalized direction and
  *             a precomputed normalized inverse direction.
- * @param  node BVH node containing either up to 8 aabbs or up to 8 triangles as children.
+ * @param  node BVH node containing either up to 8 aabbs or up to 8 triangles as node.
  * @param  hit  Address of the possible hit triangle for this specific ray.
  * @return Distance between the ray origin and the intersected triangle.
  *         Falls back to NO_INTERSECTION in case no intersection occured.
@@ -146,7 +147,8 @@ f32 traverse(const BVH_Node *restrict ray, const BVH_Node *restrict node, Triang
         // because hit never gets tested and _tmp_3 contains the smallest float
         // which could be NO_INTERSECTION aka INFINITY
         // we do not need to validate a hit
-        hit = &ray->triangles.triangles[idx];
+
+        hit = &ARRAY_ELEMENT(triangle_buffer, idx + node->packed_0);
         scale = _mm256_cvtss_f32(_tmp_0);
     }
     else {
@@ -169,9 +171,40 @@ f32 traverse(const BVH_Node *restrict ray, const BVH_Node *restrict node, Triang
             // retrieving the index of the smallest float
             u8 mask = (u8) _mm256_movemask_ps(_tmp_2);
             u8 idx = (u8) CPU_RAYTRACING_CLZ(mask);
-            scale = traverse(ray, &node->aabbs.children[idx], hit);
+
+            BVH_Node *next = &ARRAY_ELEMENT(aabb_buffer, idx + node->packed_0);
+            scale = traverse(ray, next, hit);
         }
     }
 
     return scale;
+}
+
+// struct Tri { float3 vertex0, vertex1, vertex2; float3 centroid; };
+// struct Ray { float3 O, D; float t = 1e30f; };
+
+/*
+ * struct BVHNode
+{
+float3 aabbMin, aabbMax;
+uint leftFirst, triCount;
+};
+ */
+
+// 0 - - - 4 - - -
+// 0 - 2 - 4 - 6 - // must replace all nodes from step before
+// 0 1 2 3 4 5 6 7 // must replace all nodes from step before
+
+f32 eval_sah_splitplane(const BVH_Node *node, u32 axis, f32 pos) {
+    const vec3f min = VEC3(1E30F);
+    const vec3f max = VEC3(-1E30F);
+
+    AABB left = AABB(min, max);
+    AABB right = AABB(min, max);
+
+    usize left_cnt = 0;
+    usize right_cnt = 1;
+
+    usize node_cnt;
+    NODE_CNT(node, &node_cnt);
 }
