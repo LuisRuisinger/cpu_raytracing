@@ -10,6 +10,7 @@
 #include "util/datastructures/pair.h"
 #include "util/fmt.h"
 #include "util/vec3.h"
+#include "model/obj_parser.h"
 
 #define DEFAULT_WIDTH  680
 #define DEFAULT_HEIGHT 480
@@ -76,6 +77,24 @@ void move_right   (State *state) { move(state->camera, RIGHT, state->deltatime);
 void move_up      (State *state) { move(state->camera, UP, state->deltatime); }
 void move_down    (State *state) { move(state->camera, DOWN, state->deltatime); }
 
+i32 polygon_sort(const void *a, const void *b) {
+    const Triangle *_a = *(const Triangle **) a;
+    const Triangle *_b = *(const Triangle **) b;
+
+    f32 a_len = SIGN(_a->centroid) * length(_a->centroid);
+    f32 b_len = SIGN(_b->centroid) * length(_b->centroid);
+
+    if (a_len < b_len) {
+        return -1;
+    }
+
+    if (a_len > b_len) {
+        return 1;
+    }
+
+    return 0;
+}
+
 int main(void) {
     init(DEFAULT_WIDTH, DEFAULT_HEIGHT);
     key_event_handler_init();
@@ -92,6 +111,22 @@ int main(void) {
     register_action(REPEAT, SDLK_d, (Function) { move_right });
     register_action(REPEAT, SDLK_SPACE, (Function) { move_up });
     register_action(REPEAT, SDLK_c, (Function) { move_down });
+
+
+    TriangleArr arr;
+    if (parse("../model/test/cube.obj", &arr) == -1) {
+        LOG("Obj file parsing failed");
+        LOG("Terminating ...");
+        exit(EXIT_FAILURE);
+    }
+
+    /* TODO */
+    ARRAY_SORT(arr, polygon_sort);
+    Triangle *entry = NULL;
+    ARRAY_FOREACH(arr, entry) {
+        LOG("%.2f %.2f %.2f", GET_VEC3_X(entry->centroid), GET_VEC3_Y(entry->centroid), GET_VEC3_Z(entry->centroid));
+    }
+    exit(-1);
 
     // rendering
     clock_t timestamp;

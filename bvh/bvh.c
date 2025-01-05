@@ -133,7 +133,7 @@ static ALWAYS_INLINE __m256 _mm256_broadcastminss_ps(__m256 _a) {
 f32 traverse(const BVH_Node *restrict ray, const BVH_Node *restrict node, Triangle *hit) {
     f32 scale = NO_INTERSECTION;
 
-    if (__builtin_expect(IS_LEAF(node), 0)) {
+    if (__builtin_expect(GET_LEAF(node), 0)) {
         __m256 _hits = ray_triangle_intersection((const BVH_Ray *restrict) ray, node);
 
         /// finding the smallest float and its index
@@ -205,6 +205,5 @@ f32 eval_sah_splitplane(const BVH_Node *node, u32 axis, f32 pos) {
     usize left_cnt = 0;
     usize right_cnt = 1;
 
-    usize node_cnt;
-    NODE_CNT(node, &node_cnt);
+    usize node_cnt = GET_NODE_CNT(node);
 }

@@ -13,6 +13,6 @@
 
 C_GUARD_BEGINN()
 
-i32 parse(const char *file, ARRAY(Triangle) *res);
+i32 parse(const char *file, TriangleArr *res);
 
 C_GUARD_END()

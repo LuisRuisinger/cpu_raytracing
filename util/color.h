@@ -12,9 +12,9 @@ C_GUARD_BEGINN()
 
 static ALWAYS_INLINE u32 vec3f_color_to_u32_color(vec3f color) {
     return
-        (((u32) (GET_VEC_X(color) * 255.0F) & 0xFF) << 24) |
-        (((u32) (GET_VEC_Y(color) * 255.0F) & 0xFF) << 16) |
-        (((u32) (GET_VEC_Z(color) * 255.0F) & 0xFF) <<  8) |
+        (((u32) (GET_VEC3_X(color) * 255.0F) & 0xFF) << 24) |
+        (((u32) (GET_VEC3_Y(color) * 255.0F) & 0xFF) << 16) |
+        (((u32) (GET_VEC3_Z(color) * 255.0F) & 0xFF) <<  8) |
         0xFF;
 }
 

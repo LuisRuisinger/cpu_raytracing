@@ -11,39 +11,33 @@
 #include "../bvh/aabb.h"
 #include "../util/ray.h"
 #include "../util/defines.h"
+#include "../util/datastructures/dynamic_array.h"
 
 C_GUARD_BEGINN()
 
 /**
- * Packed struct containing information about the shade of the triangle.
- * Packed size should exactly be 32 bytes.
+ * Struct containing information about the texture shading of the triangle.
+ * Aligned and sized to a multiple of ALIGNMENT_256.
  */
 typedef struct Triangle_Shade_t {
 
-    // 24 bytes + 8 bytes padding
-    vec2f uv_a;
-    vec2f uv_b;
-    vec2f uv_c;
+    // 24 bytes
+    vec2f uv[DIMENSIONS];
 
-    // 8 bytes
-    u32 static_color;
-    u32 shade_type;
-} __attribute__((packed, aligned(ALIGNMENT_256))) Triangle_Shade;
+    // 4 bytes
+    u32 tex_id;
+} __attribute__((aligned(ALIGNMENT_256))) Triangle_Shade;
 
-typedef enum Shade_t {
-    FLAT       = 1 << 0,
-    PER_VERTEX = 1 << 1,
-    TEXTURED   = 1 << 2
-} Shade;
 
-#define IS_FLAT_SHADED(triangle) \
-    ((triangle)->shade_type & FLAT)
 
-#define IS_PER_VERTEX_SHADED(triangle) \
-    ((triangle)->shade_type & PER_VERTEX)
 
-#define IS_TEXTURED_SHADED(triangle) \
-    ((triangle)->shade_type & TEXTURED)
+
+/**
+ * Struct containing information about the color of each triangle vertex.
+ */
+typedef struct Triangle_Color_t {
+    u32 color[DIMENSIONS];
+} Triangle_Color;
 
 
 
@@ -51,34 +45,42 @@ typedef enum Shade_t {
 
 /**
  * Representation of a triangle. The smallest geometric unit of this raytracing engine.
+ * Aligned and sized to a multiple of ALIGNMENT_256. Should be sized to 2 cache lines.
  */
 typedef struct Triangle_t {
 
     // 32 bytes
+    // aligned to 32
     union {
-        Triangle_Shade shade;
-        u32 static_color;
+        Triangle_Shade tex;
+        Triangle_Color col;
     };
 
-    // 32 bytes
+    // 80 bytes
     // aligned to 32
-    vec3f point_b;
-    vec3f point_c;
-
-    // 32 bytes
-    // aligned to 32
-    vec3f point_a;
+    vec3f point[3];
     vec3f normal;
+    vec3f centroid;
+
+    // 4 bytes + 16 bytes padding
+    u32 mask;
 } __attribute__((aligned(ALIGNMENT_256))) Triangle;
 
-#define TRIANGLE_CENTROID(tri) \
-    mul_scalar(add_vec(add_vec((tri).point_b, (tri).point.c), (tri).point.a)), 0.3333F)
+#define HAS_TEX_COORDS(_tri) \
+    (!!((_tri).mask & 1))
 
+#define SET_TEX_COORDS(_tri) \
+    ((_tri).mask |= 1)
+
+/**
+ * C cannot pass unnamed structs as function parameters because of ambiguity.
+ * Therefore we define a named array struct especially for triangles.
+ */
+typedef ARRAY(Triangle) TriangleArr;
 
 
 void eval_surface_normal(Triangle *triangle);
 void eval_centroid(Triangle *triangle);
-
 
 C_GUARD_END()
 

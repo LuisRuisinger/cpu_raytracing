@@ -16,11 +16,6 @@ typedef struct vec3f_t {
     __m128 vec;
 } __attribute__((aligned(16))) vec3f;
 
-typedef struct vec2f_t {
-    f32 x;
-    f32 y;
-} __attribute__((aligned(8))) vec2f;
-
 #define VEC3_PAD 0.0F
 
 #define VEC3_1(x) \
@@ -35,40 +30,40 @@ typedef struct vec2f_t {
 #define VEC3_GET_MACRO(_1, _2, _3, NAME, ...) NAME
 
 #define VEC3(...) \
-    VEC3_GET_MACRO(__VA_ARGS__, VEC3_3, VEC3_2, VEC3_1)(__VA_ARGS__)
+    VEC3_GET_MACRO(__VA_ARGS__, VEC3_3, VEC3_2, VEC3_1, INVALID)(__VA_ARGS__)
 
-#define GET_VEC_X(v) \
-    _mm_cvtss_f32(v.vec)
+#define GET_VEC3_X(v) \
+    _mm_cvtss_f32((v).vec)
 
-#define GET_VEC_Y(v) \
+#define GET_VEC3_Y(v) \
     _mm_cvtss_f32(_mm_shuffle_ps((v).vec, (v).vec, _MM_SHUFFLE(0, 0, 0, 1)))
 
-#define GET_VEC_Z(v) \
+#define GET_VEC3_Z(v) \
     _mm_cvtss_f32(_mm_shuffle_ps((v).vec, (v).vec, _MM_SHUFFLE(0, 0, 0, 2)))
 
-#define SET_VEC_X(v, x)                                                                           \
+#define SET_VEC3_X(v, x)                                                                          \
     do {                                                                                          \
         __m128 tmp_0 = _mm_set1_ps(x);                                                            \
-        (v)->vec = _mm_blend_ps((v)->vec, tmp_0, 0b0001);                                         \
+        (v).vec = _mm_blend_ps((v)->vec, tmp_0, 0b0001);                                          \
     }                                                                                             \
     while (0)
 
-#define SET_VEC_Y(v, y)                                                                           \
+#define SET_VEC3_Y(_v, y)                                                                         \
     do {                                                                                          \
         __m128 tmp_0 = _mm_set1_ps(y);                                                            \
-        (v)->vec = _mm_blend_ps((v)->vec, tmp_0, 0b0010);                                         \
+        (_v).vec = _mm_blend_ps((_v).vec, tmp_0, 0b0010);                                         \
     }                                                                                             \
     while (0)
 
-#define SET_VEC_Z(v, z)                                                                           \
+#define SET_VEC3_Z(_v, z)                                                                         \
     do {                                                                                          \
         __m128 tmp_0 = _mm_set1_ps(z);                                                            \
-        (v)->vec = _mm_blend_ps((v)->vec, tmp_0, 0b0100);                                         \
+        (_v).vec = _mm_blend_ps((_v).vec, tmp_0, 0b0100);                                         \
     }                                                                                             \
     while (0)
 
-#define SIGN(v) \
-    (-((GET_VEC_X(v) < 0) || (GET_VEC_Y(v) < 0) || (GET_VEC_Z(v) < 0)))
+#define SIGN(_v) \
+    (((GET_VEC3_X(_v) < 0) || (GET_VEC3_Y(_v) < 0) || (GET_VEC3_Z(_v) < 0)) ? -1 : +1)
 
 vec3f add_scalar(vec3f a, f32 scalar);
 
@@ -101,6 +96,22 @@ vec3f max_vec(vec3f a, vec3f b);
 vec3f refract(vec3f i, vec3f n, f32 eta);
 
 vec3f reflect(vec3f i, vec3f n);
+
+typedef struct vec2f_t {
+    f32 x;
+    f32 y;
+} __attribute__((aligned(8))) vec2f;
+
+#define VEC2_1(_x) \
+    (vec2f) { .x = _x, .y = _x }
+
+#define VEC2_2(_x, _y) \
+    (vec2f) { .x = _x, .y = _y }
+
+#define VEC2_GET_MACRO(_1, _2, NAME, ...) NAME
+
+#define VEC2(...) \
+    VEC2_GET_MACRO(__VA_ARGS__, VEC2_2, VEC2_1, INVALID)(__VA_ARGS__)
 
 C_GUARD_END()
 

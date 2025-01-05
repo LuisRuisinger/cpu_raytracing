@@ -73,16 +73,16 @@ typedef struct BVH_Node_t {
 #define NODE_CNT_MASK 7UL
 
 #define GET_LEAF(node) \
-    (!!((node)->mask_1 & LEAF_MASK))
+    (!!((node)->packed_1 & LEAF_MASK))
 
 #define SET_LEAF(node) \
-    ((node)->mask_1 |= LEAF_MASK)
+    ((node)->packed_1 |= LEAF_MASK)
 
 #define GET_NODE_CNT(node) \
-    ((node)->mask_1 & NODE_CNT_MASK)
+    ((node)->packed_1 & NODE_CNT_MASK)
 
 #define SET_NODE_CNT(node, cnt) \
-    ((node)->mask_1 = ((node)->mask_1 & ~NODE_CNT_MASK) | (cnt & NODE_CNT_MASK)
+    ((node)->packed_1 = ((node)->packed_1 & ~NODE_CNT_MASK) | (cnt & NODE_CNT_MASK)
 
 
 
@@ -109,19 +109,19 @@ typedef struct BVH_Ray_T {
 #define BVH_RAY(org_vec, dir_vec, inv_dir_vec)                                                    \
     (BVH_Ray) {                                                                                   \
         ._org = {                                                                                 \
-            _mm256_set1_ps(GET_VEC_X(org_vec)),                                                   \
-            _mm256_set1_ps(GET_VEC_Y(org_vec)),                                                   \
-            _mm256_set1_ps(GET_VEC_Z(org_vec))                                                    \
+            _mm256_set1_ps(GET_VEC3_X(org_vec)),                                                   \
+            _mm256_set1_ps(GET_VEC3_Y(org_vec)),                                                   \
+            _mm256_set1_ps(GET_VEC3_Z(org_vec))                                                    \
         },                                                                                        \
         ._dir = {                                                                                 \
-            _mm256_set1_ps(GET_VEC_X(dir_vec)),                                                   \
-            _mm256_set1_ps(GET_VEC_Y(dir_vec)),                                                   \
-            _mm256_set1_ps(GET_VEC_Z(dir_vec))                                                    \
+            _mm256_set1_ps(GET_VEC3_X(dir_vec)),                                                   \
+            _mm256_set1_ps(GET_VEC3_Y(dir_vec)),                                                   \
+            _mm256_set1_ps(GET_VEC3_Z(dir_vec))                                                    \
         },                                                                                        \
         ._inv_dir = {                                                                             \
-            _mm256_set1_ps(GET_VEC_X(inv_dir_vec)),                                               \
-            _mm256_set1_ps(GET_VEC_Y(inv_dir_vec)),                                               \
-            _mm256_set1_ps(GET_VEC_Z(inv_dir_vec))                                                \
+            _mm256_set1_ps(GET_VEC3_X(inv_dir_vec)),                                               \
+            _mm256_set1_ps(GET_VEC3_Y(inv_dir_vec)),                                               \
+            _mm256_set1_ps(GET_VEC3_Z(inv_dir_vec))                                                \
         }                                                                                         \
     }
 

@@ -10,59 +10,73 @@
 
 C_GUARD_BEGINN()
 
-#define ENTRY(key_type, value_type) \
-    struct { key_type key; value_type value; }
+#define ENTRY(_key, _value) \
+    struct { _key key; _value value; }
 
-#define ENTRY_FUNC(key_type, value_type) \
-    struct { key_type key; value_type; }
+#define ENTRY_FUNC(_key, _value) \
+    struct { _key key; _value; }
 
-#define MAP(type_0, type_1)                                                                       \
+#define MAP(_key, _value)                                                                         \
     struct {                                                                                      \
-        ARRAY(ENTRY(type_0, type_1)) entries;                                                     \
-        i32 (*cmp_fun) (type_0 *key_1, type_0 *key_2);                                            \
+        ARRAY(ENTRY(_key, _value)) entries;                                                       \
+        i32 (*cmp) (const void *a, const void *b);                                                \
     }
 
-#define MAP_FUNC(type_0, type_1)                                                                  \
+#define MAP_FUNC(_key, _value)                                                                    \
     struct {                                                                                      \
-        ARRAY(ENTRY_FUNC(type_0, type_1)) entries;                                                \
-        i32 (*cmp_fun) (type_0 *key_1, type_0 *key_2);                                            \
+        ARRAY(ENTRY_FUNC(_key, _value)) entries;                                                  \
+        i32 (*cmp) (const void *a, const void *b);                                                \
     }
 
-#define MAP_INIT(map, v) \
-    do { ARRAY_APPEND((map).entries, v); } while (0)
+#define MAP_INIT_1(_map) \
+    do { ARRAY_INIT((_map).entries, 16); } while (0)
 
-#define CONTAINS(map, key_0, res)                                                                 \
+#define MAP_INIT_2(_map, _arr)  \
+    do {                    \
+        MAP_INIT_1(_map);    \
+        ARRAY_APPEND((_map).entries, _arr); \
+    } while (0)
+
+#define GET_MAP_INIT(_1, _2, NAME, ...) NAME
+
+#define MAP_INIT(...) \
+    GET_MAP_INIT(__VA_ARGS__, MAP_INIT_2, MAP_INIT_1)(__VA_ARGS__)
+
+#define CONTAINS(_map, _key, _res)                                                                \
     do {                                                                                          \
-        *(res) = false;                                                                           \
-        __typeof__(ARRAY_ELEMENT((token_map).entries, 0)) *entry = NULL;                          \
-        ARRAY_FOREACH((map).entries, entry) {                                                     \
-            if ((map).cmp_fun(key_0, (entry)->key) == 0) {                                        \
-                *(res) = true;                                                                    \
+        __typeof(_key) *__key = &_key;                                                            \
+                                                                                                  \
+        ARRAY_TYPEOF((_map).entries) *entry = NULL;                                               \
+        ARRAY_FOREACH((_map).entries, entry) {                                                    \
+            if ((_map).cmp_fun(__key, &(entry)->key) == 0) {                                      \
+                *(_res) = true;                                                                   \
                 break;                                                                            \
             }                                                                                     \
         }                                                                                         \
     }                                                                                             \
     while (0)
 
-#define INSERT(map, entry, res)                                                                   \
+#define INSERT(_map, _e, _res)                                                                    \
     do {                                                                                          \
         *res = false;                                                                             \
         bool exists;                                                                              \
-        CONTAINS(map, (entry).key, &exists);                                                      \
+        CONTAINS(_map, (_e).key, &exists);                                                        \
                                                                                                   \
         if (!exists) {                                                                            \
-            ARRAY_PUSH_BACK((map).entries, entry);                                                \
-            *res = true;                                                                          \
+            ARRAY_PUSH_BACK((_map).entries, _e);                                                  \
+            *(_res) = true;                                                                       \
         }                                                                                         \
     }                                                                                             \
     while (0)
 
-#define GET(map, key_0, res)                                                                      \
+#define GET(_map, _key, _res)                                                                     \
     do {                                                                                          \
-        __typeof__(ARRAY_ELEMENT((map).entries, 0)) *entry = NULL;                                 \
-        ARRAY_FOREACH((map).entries, entry) {                                                     \
-            if ((map).cmp_fun((char **) key_0, &(entry)->key) == 0) {                             \
-                *(res) = *entry;                                                                   \
+        __typeof(_key) *__key = &_key;                                                            \
+                                                                                                  \
+        ARRAY_TYPEOF((_map).entries) *_entry = NULL;                                              \
+        ARRAY_FOREACH((_map).entries, _entry) {                                                   \
+            if ((_map).cmp(__key, &(_entry)->key) == 0) {                                         \
+                *((ARRAY_TYPEOF((_map).entries) *) _res) = *_entry;                               \
                 break;                                                                            \
             }                                                                                     \
         }                                                                                         \

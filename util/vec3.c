@@ -83,9 +83,9 @@ vec3f cross(vec3f a, vec3f b) {
 }
 
 vec3f inverse(vec3f a) {
-    f32 x = GET_VEC_X(a);
-    f32 y = GET_VEC_Y(a);
-    f32 z = GET_VEC_Z(a);
+    f32 x = GET_VEC3_X(a);
+    f32 y = GET_VEC3_Y(a);
+    f32 z = GET_VEC3_Z(a);
 
     return VEC3(
             x != 0 ? 1.0F / x : INFINITY,

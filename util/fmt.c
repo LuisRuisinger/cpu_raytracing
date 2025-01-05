@@ -88,19 +88,19 @@ void PRINT_FMT(5, 6) fmt_log(
 
     char prefix[1024] = { 0 };
     switch (level) {
-        case NORMAL:
+        case LEVEL_NORMAL:
             snprintf(prefix, sizeof(prefix),
                      "[\033[38;5;46mLOG\033[0m][%s:%d][%s] ", file, line, fun);
             break;
-        case DEBUG:
+        case LEVEL_DEBUG:
             snprintf(prefix, sizeof(prefix),
                      "[\033[38;5;208mDEBUG\033[0m][%s:%d][%s] ", file, line, fun);
             break;
-        case ERROR:
+        case LEVEL_ERROR:
             snprintf(prefix, sizeof(prefix),
                      "[\033[1;31mERROR\033[0m][%s:%d][%s] ", file, line, fun);
             break;
-        case WARN:
+        case LEVEL_WARN:
             snprintf(prefix, sizeof(prefix),
                      "[\033[38;5;226mWARN\033[0m[%s:%d][%s] ", file, line, fun);
             break;

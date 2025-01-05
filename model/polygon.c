@@ -7,9 +7,11 @@
 #include "polygon.h"
 
 static ALWAYS_INLINE __m256 calculate_edges_vec(const Triangle *triangle) {
+    /*
     __m256 tmp_0 = _mm256_load_ps((f32 *) &triangle->point_b);
     __m256 tmp_1 = _mm256_broadcast_ps((const __m128 *) &triangle->point_a);
     return _mm256_sub_ps(tmp_0, tmp_1);
+    */
 }
 
 void eval_surface_normal(Triangle *triangle) {
@@ -28,4 +30,9 @@ void eval_surface_normal(Triangle *triangle) {
     _mm_store_ps((f32 *) &triangle->normal, tmp_4);
 }
 
+void eval_centroid(Triangle *triangle) {
+    vec3f tmp = add_vec((triangle)->point[0], (triangle)->point[1]);
+    tmp = add_vec(tmp, (triangle)->point[2]);
 
+    triangle->centroid = mul_scalar(tmp, 0.3333F);
+}

@@ -115,9 +115,9 @@ void aabb_grow_aabb(AABB *aabb, const AABB *other) {
 f32 aabb_area(const AABB *aabb) {
     vec3f d = sub_vec(aabb->max, aabb->min);
 
-    f32 x = GET_VEC_X(d);
-    f32 y = GET_VEC_Y(d);
-    f32 z = GET_VEC_Z(d);
+    f32 x = GET_VEC3_X(d);
+    f32 y = GET_VEC3_Y(d);
+    f32 z = GET_VEC3_Z(d);
 
     return x * y + y * z + z * x;
 }
