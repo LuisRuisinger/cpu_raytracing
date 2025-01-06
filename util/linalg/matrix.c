@@ -4,55 +4,45 @@
 
 #include "matrix.h"
 
-vec4f matrix_4x4_mulv(const Matrix_4x4 *mat, vec4f v) {
-    __m128 _tmp_0 = _mm_mul_ps(mat->rows[0], v.vec);
-    __m128 _tmp_1 = _mm_mul_ps(mat->rows[1], v.vec);
-    __m128 _tmp_2 = _mm_mul_ps(mat->rows[2], v.vec);
-    __m128 _tmp_3 = _mm_mul_ps(mat->rows[3], v.vec);
+vec4f matrix_4x4_mulv(const Mat4x4 *__restrict__ mat, vec4f v) {
+    __m128 _tmp_0 = _mm_mul_ps(*((__m128*) &mat->val + 0), v.vec);
+    __m128 _tmp_1 = _mm_mul_ps(*((__m128*) &mat->val + 1), v.vec);
+    __m128 _tmp_2 = _mm_mul_ps(*((__m128*) &mat->val + 2), v.vec);
+    __m128 _tmp_3 = _mm_mul_ps(*((__m128*) &mat->val + 3), v.vec);
 
     return VEC4(_mm_hsum_ps(_tmp_0), _mm_hsum_ps(_tmp_1),
                 _mm_hsum_ps(_tmp_2), _mm_hsum_ps(_tmp_3));
 }
 
-Matrix_4x4 matrix_4x4_muls(const Matrix_4x4 *mat, f32 s) {
+void matrix_4x4_muls(const Mat4x4 *mat, Mat4x4 *dst, f32 s) {
     __m128 _tmp_0 = _mm_set1_ps(s);
 
-    return (Matrix_4x4) {
-        .rows = {
-                _mm_mul_ps(mat->rows[0], _tmp_0),
-                _mm_mul_ps(mat->rows[1], _tmp_0),
-                _mm_mul_ps(mat->rows[2], _tmp_0),
-                _mm_mul_ps(mat->rows[3], _tmp_0),
-        }
-    };
+    *((__m128*) &dst->val + 0) = _mm_mul_ps(*((__m128*) &mat->val + 0), _tmp_0);
+    *((__m128*) &dst->val + 1) = _mm_mul_ps(*((__m128*) &mat->val + 1), _tmp_0);
+    *((__m128*) &dst->val + 2) = _mm_mul_ps(*((__m128*) &mat->val + 2), _tmp_0);
+    *((__m128*) &dst->val + 3) = _mm_mul_ps(*((__m128*) &mat->val + 3), _tmp_0);
 }
 
-Matrix_4x4 matrix_4x4_transpose(const Matrix_4x4 *mat) {
-    __m128 _tmp_0 = _mm_shuffle_ps(mat->rows[0], mat->rows[1], 0x44);
-    __m128 _tmp_1 = _mm_shuffle_ps(mat->rows[0], mat->rows[1], 0xEE);
-    __m128 _tmp_2 = _mm_shuffle_ps(mat->rows[2], mat->rows[3], 0x44);
-    __m128 _tmp_3 = _mm_shuffle_ps(mat->rows[2], mat->rows[3], 0xEE);
+void matrix_4x4_transpose(const Mat4x4 *__restrict__ mat, Mat4x4 *__restrict__ dst) {
+    __m128 _tmp_0 = _mm_shuffle_ps(*((__m128*) &mat->val + 0), *((__m128*) &mat->val + 1), 0x44);
+    __m128 _tmp_1 = _mm_shuffle_ps(*((__m128*) &mat->val + 0), *((__m128*) &mat->val + 1), 0xEE);
+    __m128 _tmp_2 = _mm_shuffle_ps(*((__m128*) &mat->val + 2), *((__m128*) &mat->val + 3), 0x44);
+    __m128 _tmp_3 = _mm_shuffle_ps(*((__m128*) &mat->val + 2), *((__m128*) &mat->val + 3), 0xEE);
 
-    return (Matrix_4x4) {
-        .rows = {
-                _mm_shuffle_ps(_tmp_0, _tmp_2, 0x88),
-                _mm_shuffle_ps(_tmp_0, _tmp_2, 0xDD),
-                _mm_shuffle_ps(_tmp_1, _tmp_3, 0x88),
-                _mm_shuffle_ps(_tmp_1, _tmp_3, 0xDD)
-        }
-    };
+    *((__m128*) &dst->val + 0) = _mm_shuffle_ps(_tmp_0, _tmp_2, 0x88);
+    *((__m128*) &dst->val + 0) = _mm_shuffle_ps(_tmp_0, _tmp_2, 0xDD);
+    *((__m128*) &dst->val + 0) = _mm_shuffle_ps(_tmp_1, _tmp_3, 0x88);
+    *((__m128*) &dst->val + 0) = _mm_shuffle_ps(_tmp_1, _tmp_3, 0xDD);
 }
 
-Matrix_4x4 matrix_4x4_mulm(const Matrix_4x4 *a, const Matrix_4x4 *b) {
-    Matrix_4x4 c = matrix_4x4_transpose(b);
+void matrix_4x4_mulm(
+        const Mat4x4 *__restrict__ a, const Mat4x4 *__restrict__ b, Mat4x4 *__restrict__ c) {
+    Mat4x4 t;
+    matrix_4x4_transpose(b, &t);
 
-    return (Matrix_4x4) {
-        .rows = {
-                matrix_4x4_mulv(a, *(vec4f *) &c.rows[0]).vec,
-                matrix_4x4_mulv(a, *(vec4f *) &c.rows[1]).vec,
-                matrix_4x4_mulv(a, *(vec4f *) &c.rows[2]).vec,
-                matrix_4x4_mulv(a, *(vec4f *) &c.rows[3]).vec
-        }
-    };
+    *((__m128*) &c->val + 0) = matrix_4x4_mulv(a, *((vec4f *) t.val + 0)).vec;
+    *((__m128*) &c->val + 1) = matrix_4x4_mulv(a, *((vec4f *) t.val + 1)).vec;
+    *((__m128*) &c->val + 2) = matrix_4x4_mulv(a, *((vec4f *) t.val + 2)).vec;
+    *((__m128*) &c->val + 3) = matrix_4x4_mulv(a, *((vec4f *) t.val + 3)).vec;
 }
 

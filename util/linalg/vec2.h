@@ -7,6 +7,8 @@
 
 #include "../defines.h"
 
+C_GUARD_BEGINN()
+
 typedef struct vec2f_t {
     f32 x;
     f32 y;
@@ -54,5 +56,7 @@ vec2f vec2_min(vec2f a, vec2f b);
 vec2f vec2_max(vec2f a, vec2f b);
 vec2f vec2_refract(vec2f i, vec2f n, f32 eta);
 vec2f vec2_reflect(vec2f i, vec2f n);
+
+C_GUARD_END()
 
 #endif //CPU_RAYTRACING_VEC2_H

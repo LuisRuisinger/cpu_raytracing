@@ -10,14 +10,14 @@
 
 C_GUARD_BEGINN()
 
-typedef struct Matrix_4x4_t {
-    __m128 rows[4];
-} __attribute__((aligned(16))) Matrix_4x4;
+typedef struct Mat4x4_t {
+    alignas(16) f32 val[16];
+} Mat4x4;
 
-vec4f matrix_4x4_mulv(const Matrix_4x4 *mat, vec4f v);
-Matrix_4x4 matrix_4x4_muls(const Matrix_4x4 *mat, f32 s);
-Matrix_4x4 matrix_4x4_transpose(const Matrix_4x4 *mat);
-Matrix_4x4 matrix_4x4_mulm(const Matrix_4x4 *a, const Matrix_4x4 *b);
+vec4f matrix_4x4_mulv(const Mat4x4 *mat, vec4f v);
+void matrix_4x4_muls(const Mat4x4 *mat, Mat4x4 *dst, f32 s);
+void matrix_4x4_transpose(const Mat4x4 *mat, Mat4x4 *dst);
+void matrix_4x4_mulm(const Mat4x4 *a, const Mat4x4 *b, Mat4x4 *c);
 
 C_GUARD_END()
 
