@@ -5,8 +5,8 @@
 #include "aabb.h"
 
 void scale_vec(AABB *aabb, vec3f vec) {
-    vec3f tmp = sub_vec(aabb->max, aabb->min);
-    aabb->max = mul_vec(tmp, vec);
+    vec3f tmp = vec3_sub(aabb->max, aabb->min);
+    aabb->max = vec3_mul(tmp, vec);
 }
 
 void scale_scalar(AABB *aabb, f32 scalar) {
@@ -15,15 +15,15 @@ void scale_scalar(AABB *aabb, f32 scalar) {
 }
 
 void scale_center_vec(AABB *aabb, vec3f vec) {
-    vec3f tmp_0 = add_vec(aabb->max, aabb->min);
-    tmp_0 = mul_scalar(tmp_0, 0.5F);
+    vec3f tmp_0 = vec3_add(aabb->max, aabb->min);
+    tmp_0 = vec3_muls(tmp_0, 0.5F);
 
-    vec3f tmp_1 = sub_vec(aabb->max, aabb->min);
-    tmp_1 = mul_scalar(tmp_1, 0.5F);
-    tmp_1 = mul_vec(tmp_1, vec);
+    vec3f tmp_1 = vec3_sub(aabb->max, aabb->min);
+    tmp_1 = vec3_muls(tmp_1, 0.5F);
+    tmp_1 = vec3_mul(tmp_1, vec);
 
-    aabb->min = sub_vec(tmp_0, tmp_1);
-    aabb->max = add_vec(tmp_0, tmp_1);
+    aabb->min = vec3_sub(tmp_0, tmp_1);
+    aabb->max = vec3_add(tmp_0, tmp_1);
 }
 
 void scale_center_scalar(AABB *aabb, f32 scalar) {
@@ -32,8 +32,8 @@ void scale_center_scalar(AABB *aabb, f32 scalar) {
 }
 
 void translate_vec(AABB *aabb, vec3f vec) {
-    aabb->min = add_vec(aabb->min, vec);
-    aabb->max = add_vec(aabb->max, vec);
+    aabb->min = vec3_add(aabb->min, vec);
+    aabb->max = vec3_add(aabb->max, vec);
 }
 
 void translate_scalar(AABB *aabb, f32 scalar) {
@@ -103,17 +103,17 @@ vec3f ray_aabb_intersection_distance(const Ray *ray, const AABB *aabb) {
 }
 
 void aabb_grow_vec(AABB *aabb, vec3f v) {
-    aabb->min = min_vec(aabb->min, v);
-    aabb->max = max_vec(aabb->max, v);
+    aabb->min = vec3_min(aabb->min, v);
+    aabb->max = vec3_max(aabb->max, v);
 }
 
 void aabb_grow_aabb(AABB *aabb, const AABB *other) {
-    aabb->min = min_vec(aabb->min, other->min);
-    aabb->max = max_vec(aabb->max, other->max);
+    aabb->min = vec3_min(aabb->min, other->min);
+    aabb->max = vec3_max(aabb->max, other->max);
 }
 
 f32 aabb_area(const AABB *aabb) {
-    vec3f d = sub_vec(aabb->max, aabb->min);
+    vec3f d = vec3_sub(aabb->max, aabb->min);
 
     f32 x = GET_VEC3_X(d);
     f32 y = GET_VEC3_Y(d);

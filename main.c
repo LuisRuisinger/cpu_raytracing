@@ -9,7 +9,6 @@
 #include "util/datastructures/dynamic_array.h"
 #include "util/datastructures/pair.h"
 #include "util/fmt.h"
-#include "util/vec3.h"
 #include "model/obj_parser.h"
 
 #define DEFAULT_WIDTH  680
@@ -81,8 +80,8 @@ i32 polygon_sort(const void *a, const void *b) {
     const Triangle *_a = *(const Triangle **) a;
     const Triangle *_b = *(const Triangle **) b;
 
-    f32 a_len = SIGN(_a->centroid) * length(_a->centroid);
-    f32 b_len = SIGN(_b->centroid) * length(_b->centroid);
+    f32 a_len = VEC3_SIGN(_a->centroid) * vec3_length(_a->centroid);
+    f32 b_len = VEC3_SIGN(_b->centroid) * vec3_length(_b->centroid);
 
     if (a_len < b_len) {
         return -1;
@@ -121,11 +120,16 @@ int main(void) {
     }
 
     /* TODO */
-    ARRAY_SORT(arr, polygon_sort);
+    //ARRAY_SORT(arr, polygon_sort);
     Triangle *entry = NULL;
     ARRAY_FOREACH(arr, entry) {
         LOG("%.2f %.2f %.2f", GET_VEC3_X(entry->centroid), GET_VEC3_Y(entry->centroid), GET_VEC3_Z(entry->centroid));
     }
+
+    vec3f test = VEC3(1.0F, 2.0F, 3.0F);
+    vec3f test1 = VEC3(1.0F, 2.0F, 3.0F);
+    test = vec3_add(test, test1);
+    LOG("%.2f %.2f %.2f", GET_VEC3_X(test), GET_VEC3_Y(test), GET_VEC3_Z(test));
     exit(-1);
 
     // rendering
@@ -170,3 +174,4 @@ int main(void) {
 
     return EXIT_SUCCESS;
 }
+

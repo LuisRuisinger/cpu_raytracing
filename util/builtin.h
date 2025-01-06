@@ -48,6 +48,16 @@ typedef ssize_t  ssize;
 #if defined(__SSSE3__)
     #include <tmmintrin.h>
     #define CPU_RAYTRACING_SSSE3
+
+    // src https://stackoverflow.com/a/35270026
+    static f32 _mm_hsum_ps(__m128 _a) {
+        __m128 _tmp_0 = _mm_movehdup_ps(_a);
+        __m128 _tmp_1 = _mm_add_ps(_a, _tmp_0);
+        __m128 _tmp_2 = _mm_movehl_ps(_tmp_0, _tmp_1);
+        _tmp_2 = _mm_add_ss(_tmp_1, _tmp_2);
+
+        return _mm_cvtss_f32(_tmp_2);
+    }
 #endif
 
 #if defined(__SSE3__)

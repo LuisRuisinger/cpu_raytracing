@@ -5,7 +5,7 @@
 #ifndef SOFTWARE_RATYTRACING_AABB_H
 #define SOFTWARE_RATYTRACING_AABB_H
 
-#include "../util/vec3.h"
+#include "../util/linalg/vec3.h"
 #include "../util/ray.h"
 
 C_GUARD_BEGINN()

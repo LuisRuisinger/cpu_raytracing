@@ -14,7 +14,7 @@
  *         In case no hit occurs for one particular aabb it's result
  *         would fall back to NO_INTERSECTION.
  * @param ray  The ray containing origin, a normalized direction and
- *             a precomputed normalized inverse direction.
+ *             a precomputed normalized vec3_inverse direction.
  * @param  node Packed SOA of 8 aabbs.
  * @return __m256 packed result of 8 computed possible intersections.
  */
@@ -65,7 +65,7 @@ static __m256 ALWAYS_INLINE avx_multi_dot(
  *         In case no hit occurs for one particular triangle it's result
  *         would fall back to NO_INTERSECTION.
  * @param ray  The ray containing origin, a normalized direction and
- *             a precomputed normalized inverse direction.
+ *             a precomputed normalized vec3_inverse direction.
  * @param  node Packed SOA of 8 triangles.
  * @return __m256 packed result of 8 computed possible intersections.
  */
@@ -124,7 +124,7 @@ static ALWAYS_INLINE __m256 _mm256_broadcastminss_ps(__m256 _a) {
  * @brief  Recursive traverses a BVH containing either up to 8 child nodes or up to 8 triangles.
  *         Calculates a possible intersection for a single ray.
  * @param  ray  The ray containing origin, a normalized direction and
- *             a precomputed normalized inverse direction.
+ *             a precomputed normalized vec3_inverse direction.
  * @param  node BVH node containing either up to 8 aabbs or up to 8 triangles as node.
  * @param  hit  Address of the possible hit triangle for this specific ray.
  * @return Distance between the ray origin and the intersected triangle.

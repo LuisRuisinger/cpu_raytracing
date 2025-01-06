@@ -5,7 +5,7 @@
 #ifndef SOFTWARE_RATYTRACING_COLOR_H
 #define SOFTWARE_RATYTRACING_COLOR_H
 
-#include "vec3.h"
+#include "linalg/vec3.h"
 #include "defines.h"
 
 C_GUARD_BEGINN()

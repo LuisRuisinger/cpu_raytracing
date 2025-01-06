@@ -5,7 +5,7 @@
 #include <assert.h>
 
 #include "../util/camera.h"
-#include "../util/vec3.h"
+#include "linalg/vec3.h"
 #include "../util/fmt.h"
 
 #define MAX_PITCH   89.0F
@@ -43,13 +43,13 @@ static void camera_update(Camera *cam) {
             cosf_yaw * cosf_pitch,
             sinf(TO_RADIANS(cam->pitch)),
             sinf(TO_RADIANS(cam->yaw)) * cosf_pitch);
-    cam->front = normalize(cam->front);
+    cam->front = vec3_normalize(cam->front);
 
-    cam->right = cross(cam->front, cam->world_up);
-    cam->right = normalize(cam->right);
+    cam->right = vec3_cross(cam->front, cam->world_up);
+    cam->right = vec3_normalize(cam->right);
 
-    cam->up = cross(cam->right, cam->front);
-    cam->up = normalize(cam->up);
+    cam->up = vec3_cross(cam->right, cam->front);
+    cam->up = vec3_normalize(cam->up);
 }
 
 Camera *camera_create(void) {
@@ -91,12 +91,12 @@ void move(Camera *cam, Direction dir, f32 dt) {
     fprintf(stdout, "%d\n", dir);
 
     switch (dir) {
-        case FORWARD : cam->pos = add_vec(cam->pos, mul_scalar(cam->front, velocity)); break;
-        case BACKWARD: cam->pos = sub_vec(cam->pos, mul_scalar(cam->front, velocity)); break;
-        case RIGHT   : cam->pos = add_vec(cam->pos, mul_scalar(cam->right, velocity)); break;
-        case LEFT    : cam->pos = sub_vec(cam->pos, mul_scalar(cam->right, velocity)); break;
-        case UP      : cam->pos = add_vec(cam->pos, mul_scalar(cam->up, velocity));    break;
-        case DOWN    : cam->pos = sub_vec(cam->pos, mul_scalar(cam->up, velocity));    break;
+        case FORWARD : cam->pos = vec3_add(cam->pos, vec3_muls(cam->front, velocity)); break;
+        case BACKWARD: cam->pos = vec3_sub(cam->pos, vec3_muls(cam->front, velocity)); break;
+        case RIGHT   : cam->pos = vec3_add(cam->pos, vec3_muls(cam->right, velocity)); break;
+        case LEFT    : cam->pos = vec3_sub(cam->pos, vec3_muls(cam->right, velocity)); break;
+        case UP      : cam->pos = vec3_add(cam->pos, vec3_muls(cam->up, velocity));    break;
+        case DOWN    : cam->pos = vec3_sub(cam->pos, vec3_muls(cam->up, velocity));    break;
     }
 }
 

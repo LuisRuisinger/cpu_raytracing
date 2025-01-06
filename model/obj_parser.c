@@ -8,7 +8,7 @@
 
 #include "obj_parser.h"
 #include "../util/datastructures/dict.h"
-#include "../util/vec3.h"
+#include "../util/linalg/vec3.h"
 #include "../global.h"
 #include "../util/fmt.h"
 

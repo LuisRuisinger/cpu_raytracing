@@ -31,8 +31,8 @@ void eval_surface_normal(Triangle *triangle) {
 }
 
 void eval_centroid(Triangle *triangle) {
-    vec3f tmp = add_vec((triangle)->point[0], (triangle)->point[1]);
-    tmp = add_vec(tmp, (triangle)->point[2]);
+    vec3f tmp = vec3_add((triangle)->point[0], (triangle)->point[1]);
+    tmp = vec3_add(tmp, (triangle)->point[2]);
 
-    triangle->centroid = mul_scalar(tmp, 0.3333F);
+    triangle->centroid = vec3_muls(tmp, 0.3333F);
 }

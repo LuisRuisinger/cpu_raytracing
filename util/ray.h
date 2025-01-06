@@ -6,7 +6,7 @@
 #define SOFTWARE_RAYTRACING_RAY_H
 
 #include "defines.h"
-#include "vec3.h"
+#include "linalg/vec3.h"
 
 C_GUARD_BEGINN()
 

@@ -6,7 +6,7 @@
 #define SOFTWARE_RATYTRACING_BVH_H
 
 #include "../util/datastructures/bitmap.h"
-#include "../util/vec3.h"
+#include "../util/linalg/vec3.h"
 #include "../util/ray.h"
 
 #include "../model/polygon.h"
@@ -18,7 +18,7 @@ C_GUARD_BEGINN()
  */
 typedef struct BVH_Triangles_t {
 
-    // two edges of each triangle needed for the cross product
+    // two edges of each triangle needed for the vec3_cross product
     // split up in x, y and z
     __m256 _edge_0[DIMENSIONS];
     __m256 _edge_1[DIMENSIONS];
@@ -102,7 +102,7 @@ typedef struct BVH_Ray_T {
     __m256 _org[DIMENSIONS];
     __m256 _dir[DIMENSIONS];
 
-    // precomputed inverse direction
+    // precomputed vec3_inverse direction
     __m256 _inv_dir[DIMENSIONS];
 } __attribute__((aligned(ALIGNMENT_256))) BVH_Ray;
 

@@ -7,7 +7,8 @@
 
 #include <float.h>
 
-#include "../util/vec3.h"
+#include "../util/linalg/vec3.h"
+#include "../util/linalg/vec2.h"
 #include "../bvh/aabb.h"
 #include "../util/ray.h"
 #include "../util/defines.h"
