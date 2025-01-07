@@ -56,6 +56,11 @@ void mat4x4_mulm(
     ROW(c, 3) = mat4x4_mulv(a, *((vec4f *) t.val + 3)).vec;
 }
 
+/**
+ * @brief Computes the inverse of an arbitrary 4x4 matrix.
+ * @param src The source transformation matrix.
+ * @param dst The destination transformation matrix where we want to store the inverse of src.
+ */
 void mat4x4_inverse(const Mat4x4 *__restrict__ src, Mat4x4 *__restrict__ dst) {
     Mat2x2 a = { .row = _mm_movelh_ps(ROW(src, 0), ROW(src, 1)) };
     Mat2x2 b = { .row = _mm_movehl_ps(ROW(src, 1), ROW(src, 0)) };
@@ -111,6 +116,69 @@ void mat4x4_inverse(const Mat4x4 *__restrict__ src, Mat4x4 *__restrict__ dst) {
     ROW(dst, 1) = _mm_shuffle_ps(_x, _y, _MM_SHUFFLE(0, 2, 0, 2));
     ROW(dst, 2) = _mm_shuffle_ps(_z, _w, _MM_SHUFFLE(1, 3, 1, 3));
     ROW(dst, 3) = _mm_shuffle_ps(_z, _w, _MM_SHUFFLE(0, 2, 0, 2));
+}
+
+/**
+ * @brief Computes the inverse of a transformation matrix which does not apply any scaling.
+ * @param src The source transformation matrix.
+ * @param dst The destination transformation matrix where we want to store the inverse of src.
+ */
+void mat4x4_inverse_tns(const Mat4x4 *__restrict__ src, Mat4x4 *__restrict__ dst) {
+    Mat2x2 a = { .row = _mm_movelh_ps(ROW(src, 0), ROW(src, 1)) };
+    Mat2x2 b = { .row = _mm_movehl_ps(ROW(src, 1), ROW(src, 0)) };
+
+    ROW(dst, 0) = _mm_shuffle_ps(ROW(&a, 0), ROW(src, 2), _MM_SHUFFLE(3, 0, 2, 0));
+    ROW(dst, 1) = _mm_shuffle_ps(ROW(&a, 0), ROW(src, 2), _MM_SHUFFLE(3, 1, 3, 1));
+    ROW(dst, 2) = _mm_shuffle_ps(ROW(&b, 0), ROW(src, 2), _MM_SHUFFLE(3, 2, 2, 0));
+
+    __m128 _tmp_0 = _mm_shuffle_epi32(_mm_castps_si128(ROW(src, 0)), _MM_SHUFFLE(0, 0, 0, 0));
+    __m128 _tmp_1 = _mm_shuffle_epi32(_mm_castps_si128(ROW(src, 0)), _MM_SHUFFLE(1, 1, 1, 1));
+    __m128 _tmp_2 = _mm_shuffle_epi32(_mm_castps_si128(ROW(src, 0)), _MM_SHUFFLE(2, 2, 2, 2));
+
+    _tmp_0 = _mm_mul_ps(ROW(dst, 0), _mm_castsi128_ps(_tmp_0));
+    _tmp_1 = _mm_mul_ps(ROW(dst, 1), _mm_castsi128_ps(_tmp_1));
+    _tmp_2 = _mm_mul_ps(ROW(dst, 2), _mm_castsi128_ps(_tmp_2));
+
+    ROW(dst, 3) = _mm_add_ps(_mm_add_ps(_tmp_0, _tmp_1), _tmp_2);
+    ROW(dst, 3) = _mm_sub_ps(_mm_setr_ps(0.0F, 0.0F, 0.0F, 1.0F), ROW(dst, 3));
+}
+
+/**
+ * @brief Computes the inverse of a general transformation matrix.
+ * @param src The source transformation matrix.
+ * @param dst The destination transformation matrix where we want to store the inverse of src.
+ */
+void mat4x4_inverse_t(const Mat4x4 *__restrict__ src, Mat4x4 *__restrict__ dst) {
+    Mat2x2 a = { .row = _mm_movelh_ps(ROW(src, 0), ROW(src, 1)) };
+    Mat2x2 b = { .row = _mm_movehl_ps(ROW(src, 1), ROW(src, 0)) };
+
+    ROW(dst, 0) = _mm_shuffle_ps(ROW(&a, 0), ROW(src, 2), _MM_SHUFFLE(3, 0, 2, 0));
+    ROW(dst, 1) = _mm_shuffle_ps(ROW(&a, 0), ROW(src, 2), _MM_SHUFFLE(3, 1, 3, 1));
+    ROW(dst, 2) = _mm_shuffle_ps(ROW(&b, 0), ROW(src, 2), _MM_SHUFFLE(3, 2, 2, 0));
+
+    __m128 _tmp_0 = _mm_mul_ps(ROW(dst, 0), ROW(dst, 0));
+    _tmp_0 = _mm_add_ps(_tmp_0, _mm_mul_ps(ROW(dst, 1), ROW(dst, 1)));
+    _tmp_0 = _mm_add_ps(_tmp_0, _mm_mul_ps(ROW(dst, 2), ROW(dst, 2)));
+
+    __m128 _tmp_1 = _mm_set1_ps(1.0F);
+    __m128 _tmp_2 = _mm_div_ps(_tmp_1, _tmp_0);
+    _tmp_2 = _mm_blendv_ps(_tmp_2, _tmp_1, _mm_cmplt_ps(_tmp_0, _mm_set1_ps(1.0E-8F)));
+
+    ROW(dst, 0) = _mm_mul_ps(ROW(dst, 0), _tmp_2);
+    ROW(dst, 1) = _mm_mul_ps(ROW(dst, 1), _tmp_2);
+    ROW(dst, 2) = _mm_mul_ps(ROW(dst, 2), _tmp_2);
+
+
+    __m128 _tmp_3 = _mm_shuffle_epi32(_mm_castps_si128(ROW(src, 0)), _MM_SHUFFLE(0, 0, 0, 0));
+    __m128 _tmp_4 = _mm_shuffle_epi32(_mm_castps_si128(ROW(src, 0)), _MM_SHUFFLE(1, 1, 1, 1));
+    __m128 _tmp_5 = _mm_shuffle_epi32(_mm_castps_si128(ROW(src, 0)), _MM_SHUFFLE(2, 2, 2, 2));
+
+    _tmp_3 = _mm_mul_ps(ROW(dst, 0), _mm_castsi128_ps(_tmp_3));
+    _tmp_4 = _mm_mul_ps(ROW(dst, 1), _mm_castsi128_ps(_tmp_4));
+    _tmp_5 = _mm_mul_ps(ROW(dst, 2), _mm_castsi128_ps(_tmp_5));
+
+    ROW(dst, 3) = _mm_add_ps(_mm_add_ps(_tmp_3, _tmp_4), _tmp_5);
+    ROW(dst, 3) = _mm_sub_ps(_mm_setr_ps(0.0F, 0.0F, 0.0F, 1.0F), ROW(dst, 3));
 }
 
 

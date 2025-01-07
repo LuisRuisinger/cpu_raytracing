@@ -15,14 +15,14 @@ typedef struct Mat2x2_t {
         alignas(16) f32 val[4];
         __m128 row;
     };
-} Mat2x2;
+} __attribute__((aligned(16))) Mat2x2;
 
 typedef struct Mat4x4_t {
     union {
         alignas(16) f32 val[16];
         __m128 rows[4];
     };
-} Mat4x4;
+} __attribute__((aligned(16))) Mat4x4;
 
 #define ROW(mat, i) \
     *((__m128*) &(mat)->val + i)
@@ -76,6 +76,7 @@ vec4f mat4x4_mulv(const Mat4x4 *mat, vec4f v);
 void mat4x4_muls(const Mat4x4 *mat, Mat4x4 *dst, f32 s);
 void mat4x4_transpose(const Mat4x4 *src, Mat4x4 *dst);
 void mat4x4_mulm(const Mat4x4 *a, const Mat4x4 *b, Mat4x4 *c);
+void mat4x4_inverse_ns(const Mat4x4 *__restrict__ src, Mat4x4 *__restrict__ dst);
 
 ALWAYS_INLINE static Mat2x2 mat2x2_indentity() {
     return (Mat2x2) { .row = _mm_set_ps(1.0F, 0.0F, 0.0F, 1.0F) };
