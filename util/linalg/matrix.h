@@ -10,32 +10,40 @@
 
 C_GUARD_BEGINN()
 
+#if defined(__AVX512F__)
+    #define MAT_ALIGNMENT 64
+#elif defined(__AVX2__)
+    #define MAT_ALIGNMENT 32
+#else
+    #define MAT_ALIGNMENT 16
+#endif
+
 typedef struct Mat2x2_t {
     union {
-        alignas(32) f32 val[4];
-        alignas(32) __m128 row;
+        alignas(MAT_ALIGNMENT) f32 val[4];
+        alignas(MAT_ALIGNMENT) __m128 row;
     };
-} __attribute__((aligned(16))) Mat2x2;
+} __attribute__((aligned(MAT_ALIGNMENT))) Mat2x2;
 
 typedef struct Mat4x4_t {
     union {
-        alignas(32) f32 val[16];
-        alignas(32) __m128 rows[4];
+        alignas(MAT_ALIGNMENT) f32 val[16];
+        alignas(MAT_ALIGNMENT) __m128 rows[4];
     };
-} __attribute__((aligned(32))) Mat4x4;
+} __attribute__((aligned(MAT_ALIGNMENT))) Mat4x4;
 
-#define ROW_128(mat, i) \
-    *((__m128*) &(mat)->val + i)
+#if defined(__AVX512F__)
+#define ROW_512(mat, i) \
+    *((__m512*) &(mat)->val + i)
+#endif
 
-#ifdef __AVX2__
+#if defined(__AVX2__)
 #define ROW_256(mat, i) \
     *((__m256*) &(mat)->val + i)
 #endif
 
-#ifdef __AVX512F__
-#define ROW_512(mat, i) \
-    *((__m512*) &(mat)->val + i)
-#endif
+#define ROW_128(mat, i) \
+    *((__m128*) &(mat)->val + i)
 
 ALWAYS_INLINE static Mat2x2 mat2x2_indentity() {
 
@@ -43,8 +51,39 @@ ALWAYS_INLINE static Mat2x2 mat2x2_indentity() {
     return (Mat2x2) { .row = _mm_set_ps(1.0F, 0.0F, 0.0F, 1.0F) };
 }
 
-ALWAYS_INLINE static Mat2x2 mat4x4_indentity() {
-    /* TODO */
+ALWAYS_INLINE static Mat4x4 mat4x4_indentity() {
+#if defined(__AVX512F__)
+    Mat4x4 mat;
+
+    // this does not care about row-major / column-major ordering
+    *(__m512 *) &mat = _mm512_set_ps(
+            1.0F, 0.0F, 0.0F, 0.0F, 0.0F, 1.0F, 0.0F, 0.F,
+            0.0F, 0.0F, 1.0F, 0.0F, 0.0F, 0.0F, 0.0F, 1.0F);
+
+    return mat;
+
+#elif defined(__AVX2__)
+    Mat4x4 mat;
+
+    // this does not care about row-major / column-major ordering
+    *((__m256 *) &mat + 0) = _mm256_set_ps(1.0F, 0.0F, 0.0F, 0.0F, 0.0F, 1.0F, 0.0F, 0.0F);
+    *((__m256 *) &mat + 1) = _mm256_set_ps(0.0F, 0.0F, 1.0F, 0.0F, 0.0F, 0.0F, 0.0F, 1.0F);
+
+    return mat;
+
+#else
+    Mat4x4 mat;
+
+    // the matrix is aligned to __m128 therefore this cast is valid
+    // this does not care about row-major / column-major ordering
+    *((__m256 *) &mat + 0) = _mm_set_ps(1.0F, 0.0F, 0.0F, 0.0F);
+    *((__m256 *) &mat + 1) = _mm_set_ps(0.0F, 1.0F, 0.0F, 0.0F);
+    *((__m256 *) &mat + 2) = _mm_set_ps(0.0F, 0.0F, 1.0F, 0.0F);
+    *((__m256 *) &mat + 3) = _mm_set_ps(0.0F, 0.0F, 0.0F, 1.0F);
+
+    return mat;
+
+#endif
 }
 
 ALWAYS_INLINE static void mat2x2_mulm(
@@ -90,12 +129,19 @@ ALWAYS_INLINE static void mat2x2_muladj(
 
 ALWAYS_INLINE static void mat4x4_muls(
         const Mat4x4 *__restrict__ mat, Mat4x4 *__restrict__ dst, f32 s) {
-#ifdef __AVX2__
+#if defined(__AVX512F__)
+    __m512 _tmp_0 = _mm512_set1_ps(s);
+
+    // this does not care about row-major / column-major ordering
+    ROW_512(dst, 0) = _mm512_mul_ps(ROW_512(mat, 0), _tmp_0);
+
+#elif defined(__AVX2__)
     __m256 _tmp_0 = _mm256_set1_ps(s);
 
     // this does not care about row-major / column-major ordering
     ROW_256(dst, 0) = _mm256_mul_ps(ROW_256(mat, 0), _tmp_0);
     ROW_256(dst, 1) = _mm256_mul_ps(ROW_256(mat, 1), _tmp_0);
+
 #else
     __m128 _tmp_0 = _mm_set1_ps(s);
 
@@ -121,8 +167,8 @@ ALWAYS_INLINE static void mat4x4_transpose(
 }
 
 ALWAYS_INLINE static vec4f mat4x4_mulv(const Mat4x4 *__restrict__ mat, vec4f v) {
-#ifdef __AVX512F__
-#elif __AVX2__
+#if defined(__AVX512F__)
+#elif defined(__AVX2__)
     __m256 _tmp_0 = _mm256_set_m128(_mm_set1_ps(GET_VEC4_X(v)), _mm_set1_ps(GET_VEC4_Y(v)));
     __m256 _tmp_1 = _mm256_set_m128(_mm_set1_ps(GET_VEC4_Z(v)), _mm_set1_ps(GET_VEC4_W(v)));
     __m256 _tmp_2 = _mm256_mul_ps(ROW_256(mat, 0), _tmp_0);
@@ -144,7 +190,7 @@ ALWAYS_INLINE static vec4f mat4x4_mulv(const Mat4x4 *__restrict__ mat, vec4f v) 
 #endif
 }
 
-#ifdef __AVX512F__
+#if defined(__AVX512F__)
 ALWAYS_INLINE static __m512 mat4x4_mulv4(const Mat4x4 *__restrict__ mat, __m512 pv) {
     __m512 _tmp_0 = _mm512_shuffle_epi32(_mm512_castps_si512(pv), _MM_SHUFFLE(0, 0, 0, 0));
     __m512 _tmp_1 = _mm512_shuffle_epi32(_mm512_castps_si512(pv), _MM_SHUFFLE(1, 1, 1, 1));
@@ -160,7 +206,7 @@ ALWAYS_INLINE static __m512 mat4x4_mulv4(const Mat4x4 *__restrict__ mat, __m512 
 }
 #endif
 
-#ifdef __AVX2__
+#if defined(__AVX2__)
 ALWAYS_INLINE static __m256 mat4x4_mulv2(const Mat4x4 *__restrict__ mat, __m256 pv) {
     __m256 _tmp_0 = _mm256_shuffle_epi32(_mm256_castps_si256(pv), _MM_SHUFFLE(0, 0, 0, 0));
     __m256 _tmp_1 = _mm256_shuffle_epi32(_mm256_castps_si256(pv), _MM_SHUFFLE(1, 1, 1, 1));
@@ -182,10 +228,10 @@ ALWAYS_INLINE static void mat4x4_mulm(
     // 4x4 matrices are stored in row-major order rather than column-major to speed up
     // 4x4 matrix vector and matrix multiplication
     // this implies that b itself doesn't need to be transposed to linearize the multiplication
-#ifdef __AVX512F__
+#if defined(__AVX512F__)
     ROW_512(c, 0) = mat4x4_mulv4(a, *((__m512 *) b->val + 0));
 
-#elif __AVX2__
+#elif defined(__AVX2__)
     ROW_256(c, 0) = mat4x4_mulv2(a, *((__m256 *) b->val + 0));
     ROW_256(c, 1) = mat4x4_mulv2(a, *((__m256 *) b->val + 1));
 
@@ -198,31 +244,35 @@ ALWAYS_INLINE static void mat4x4_mulm(
 #endif
 }
 
-ALWAYS_INLINE static Mat4x4 mat4x4_from_vec(const __m128 vec[4]) {
+ALWAYS_INLINE static Mat4x4 mat4x4_from_rvec(const vec3f v[4]) {
 
     // 4x4 matrices are stored in row-major order rather than column-major to speed up
     // 4x4 matrix vector and matrix multiplication
-    return (Mat4x4) { .rows = { vec[0], vec[1], vec[2], vec[3] } };
+    return (Mat4x4) { .rows = { v[0].vec, v[1].vec, v[2].vec, v[3].vec } };
+}
+
+ALWAYS_INLINE static Mat4x4 mat4x4_from_cvec(const vec3f v[4]) {
+
+    // transpose needed to ensure row-major order
+    Mat4x4 mat = { .rows = { v[0].vec, v[1].vec, v[2].vec, v[3].vec } };
+    Mat4x4 dst;
+
+    mat4x4_transpose(&mat, &dst);
+    return dst;
 }
 
 ALWAYS_INLINE static Mat2x2 mat4x4_to_mat2x2(const Mat4x4 *__restrict__ src) {
-    Mat2x2 m = { .row = _mm_movelh_ps(ROW_128(src, 0), ROW_128(src, 1)) };
+    Mat2x2 mat = { .row = _mm_movelh_ps(ROW_128(src, 0), ROW_128(src, 1)) };
     Mat2x2 dst;
 
     // 2x2 matrices are stored in column-major order in contrast to
     // the row-major representation of 4x4 matrices
-    mat2x2_transpose(&m, &dst);
+    mat2x2_transpose(&mat, &dst);
     return dst;
 }
 
 ALWAYS_INLINE static Mat4x4 mat2x2_to_mat4x4(const Mat2x2 *__restrict__ src) {
-    Mat2x2 m;
-
-    // 2x2 matrices are stored in column-major order in contrast to
-    // the row-major representation of 4x4 matrices
-    mat2x2_transpose(src, &m);
-
-
+    /* TODO */
 }
 
 /**
