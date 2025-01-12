@@ -76,9 +76,8 @@ void camera_destroy(Camera *cam) {
 }
 
 void camera_stringify(Camera *cam) {
-    DEBUG_LOG(
-            "[%.3f %.3f %.3f] pitch: %.3f yaw: %.3f",
-            GET_VEC3_X(cam->pos), GET_VEC3_Y(cam->pos), GET_VEC3_Z(cam->pos), cam->pitch, cam->yaw);
+    LOG("[%.3f %.3f %.3f] pitch: %.3f yaw: %.3f",
+        GET_VEC3_X(cam->pos), GET_VEC3_Y(cam->pos), GET_VEC3_Z(cam->pos), cam->pitch, cam->yaw);
 }
 
 usize camera_size(void) {

@@ -7,6 +7,7 @@
 
 #include "../defines.h"
 #include "vec3.h"
+#include "vec2.h"
 
 C_GUARD_BEGINN()
 
@@ -45,20 +46,20 @@ typedef struct Mat4x4_t {
 #define ROW_128(mat, i) \
     *((__m128*) &(mat)->val + i)
 
-ALWAYS_INLINE static Mat2x2 mat2x2_indentity() {
+ALWAYS_INLINE static Mat2x2 mat2x2_identity() {
 
     // this does not care about row-major / column-major ordering
     return (Mat2x2) { .row = _mm_set_ps(1.0F, 0.0F, 0.0F, 1.0F) };
 }
 
-ALWAYS_INLINE static Mat4x4 mat4x4_indentity() {
+ALWAYS_INLINE static Mat4x4 mat4x4_identity() {
 #if defined(__AVX512F__)
     Mat4x4 mat;
 
     // this does not care about row-major / column-major ordering
-    *(__m512 *) &mat = _mm512_set_ps(
-            1.0F, 0.0F, 0.0F, 0.0F, 0.0F, 1.0F, 0.0F, 0.F,
-            0.0F, 0.0F, 1.0F, 0.0F, 0.0F, 0.0F, 0.0F, 1.0F);
+    ROW_512(&mat, 0) = _mm512_set_ps(
+            0.0F, 0.0F, 1.0F, 0.0F, 0.0F, 0.0F, 0.0F, 1.0F,
+            1.0F, 0.0F, 0.0F, 0.0F, 0.0F, 1.0F, 0.0F, 0.0F);
 
     return mat;
 
@@ -66,8 +67,8 @@ ALWAYS_INLINE static Mat4x4 mat4x4_indentity() {
     Mat4x4 mat;
 
     // this does not care about row-major / column-major ordering
-    *((__m256 *) &mat + 0) = _mm256_set_ps(1.0F, 0.0F, 0.0F, 0.0F, 0.0F, 1.0F, 0.0F, 0.0F);
-    *((__m256 *) &mat + 1) = _mm256_set_ps(0.0F, 0.0F, 1.0F, 0.0F, 0.0F, 0.0F, 0.0F, 1.0F);
+    ROW_256(&mat, 0) = _mm256_set_ps(0.0F, 0.0F, 1.0F, 0.0F, 0.0F, 0.0F, 0.0F, 1.0F);
+    ROW_256(&mat, 1) = _mm256_set_ps(1.0F, 0.0F, 0.0F, 0.0F, 0.0F, 1.0F, 0.0F, 0.0F);
 
     return mat;
 
@@ -76,14 +77,34 @@ ALWAYS_INLINE static Mat4x4 mat4x4_indentity() {
 
     // the matrix is aligned to __m128 therefore this cast is valid
     // this does not care about row-major / column-major ordering
-    *((__m256 *) &mat + 0) = _mm_set_ps(1.0F, 0.0F, 0.0F, 0.0F);
-    *((__m256 *) &mat + 1) = _mm_set_ps(0.0F, 1.0F, 0.0F, 0.0F);
-    *((__m256 *) &mat + 2) = _mm_set_ps(0.0F, 0.0F, 1.0F, 0.0F);
-    *((__m256 *) &mat + 3) = _mm_set_ps(0.0F, 0.0F, 0.0F, 1.0F);
+    ROW_128(&mat, 0) = _mm_set_ps(0.0F, 0.0F, 0.0F, 1.0F);
+    ROW_128(&mat, 1) = _mm_set_ps(0.0F, 0.0F, 1.0F, 0.0F);
+    ROW_128(&mat, 2) = _mm_set_ps(0.0F, 1.0F, 0.0F, 0.0F);
+    ROW_128(&mat, 0) = _mm_set_ps(1.0F, 0.0F, 0.0F, 0.0F);
 
     return mat;
 
 #endif
+}
+
+ALWAYS_INLINE static void mat2x2_muls(
+        const Mat2x2 *__restrict__ src, Mat2x2 *__restrict__ dst, f32 s) {
+    ROW_128(dst, 0) = _mm_mul_ps(ROW_128(src, 0), _mm_set1_ps(s));
+}
+
+ALWAYS_INLINE static vec2f mat2x2_mulv(const Mat2x2 *__restrict__ src, vec2f v) {
+    __m128 _tmp_0 = _mm_shuffle_ps(ROW_128(src, 0), ROW_128(src, 0), _MM_SHUFFLE(3, 1, 2, 0));
+
+    f32 x = GET_VEC2_X(v);
+    f32 y = GET_VEC2_Y(v);
+    __m128 _tmp_1 = _mm_set_ps(x, y, x, y);
+    _tmp_1 = _mm_mul_ps(_tmp_0, _tmp_1);
+    _tmp_1 = _mm_hadd_ps(_tmp_1, _tmp_1);
+
+    return (vec2f) {
+        .x = _mm_cvtss_f32(_tmp_1),
+        .y = _mm_cvtss_f32(_mm_movehl_ps(_tmp_1, _tmp_1))
+    }
 }
 
 ALWAYS_INLINE static void mat2x2_mulm(
@@ -100,7 +121,7 @@ ALWAYS_INLINE static void mat2x2_mulm(
 
 ALWAYS_INLINE static void mat2x2_transpose(
         const Mat2x2 *__restrict__ src, Mat2x2 *__restrict__ dst) {
-    ROW_128(dst, 0) = _mm_shuffle_ps(ROW_128(src, 0), ROW_128(src, 0), _MM_SHUFFLE(0, 2, 1, 3));
+    ROW_128(dst, 0) = _mm_shuffle_ps(ROW_128(src, 0), ROW_128(src, 0), _MM_SHUFFLE(3, 1, 2, 0));
 }
 
 ALWAYS_INLINE static void mat2x2_adjmul(
@@ -128,28 +149,28 @@ ALWAYS_INLINE static void mat2x2_muladj(
 }
 
 ALWAYS_INLINE static void mat4x4_muls(
-        const Mat4x4 *__restrict__ mat, Mat4x4 *__restrict__ dst, f32 s) {
+        const Mat4x4 *__restrict__ src, Mat4x4 *__restrict__ dst, f32 s) {
 #if defined(__AVX512F__)
     __m512 _tmp_0 = _mm512_set1_ps(s);
 
     // this does not care about row-major / column-major ordering
-    ROW_512(dst, 0) = _mm512_mul_ps(ROW_512(mat, 0), _tmp_0);
+    ROW_512(dst, 0) = _mm512_mul_ps(ROW_512(src, 0), _tmp_0);
 
 #elif defined(__AVX2__)
     __m256 _tmp_0 = _mm256_set1_ps(s);
 
     // this does not care about row-major / column-major ordering
-    ROW_256(dst, 0) = _mm256_mul_ps(ROW_256(mat, 0), _tmp_0);
-    ROW_256(dst, 1) = _mm256_mul_ps(ROW_256(mat, 1), _tmp_0);
+    ROW_256(dst, 0) = _mm256_mul_ps(ROW_256(src, 0), _tmp_0);
+    ROW_256(dst, 1) = _mm256_mul_ps(ROW_256(src, 1), _tmp_0);
 
 #else
     __m128 _tmp_0 = _mm_set1_ps(s);
 
     // this does not care about row-major / column-major ordering
-    ROW_128(dst, 0) = _mm_mul_ps(ROW_128(mat, 0), _tmp_0);
-    ROW_128(dst, 1) = _mm_mul_ps(ROW_128(mat, 1), _tmp_0);
-    ROW_128(dst, 2) = _mm_mul_ps(ROW_128(mat, 2), _tmp_0);
-    ROW_128(dst, 3) = _mm_mul_ps(ROW_128(mat, 3), _tmp_0);
+    ROW_128(dst, 0) = _mm_mul_ps(ROW_128(src, 0), _tmp_0);
+    ROW_128(dst, 1) = _mm_mul_ps(ROW_128(src, 1), _tmp_0);
+    ROW_128(dst, 2) = _mm_mul_ps(ROW_128(src, 2), _tmp_0);
+    ROW_128(dst, 3) = _mm_mul_ps(ROW_128(src, 3), _tmp_0);
 #endif
 }
 
@@ -229,11 +250,11 @@ ALWAYS_INLINE static void mat4x4_mulm(
     // 4x4 matrix vector and matrix multiplication
     // this implies that b itself doesn't need to be transposed to linearize the multiplication
 #if defined(__AVX512F__)
-    ROW_512(c, 0) = mat4x4_mulv4(a, *((__m512 *) b->val + 0));
+    ROW_512(c, 0) = mat4x4_mulv4(a, ROW_512(b, 0));
 
 #elif defined(__AVX2__)
-    ROW_256(c, 0) = mat4x4_mulv2(a, *((__m256 *) b->val + 0));
-    ROW_256(c, 1) = mat4x4_mulv2(a, *((__m256 *) b->val + 1));
+    ROW_256(c, 0) = mat4x4_mulv2(a, ROW_256(b, 0));
+    ROW_256(c, 1) = mat4x4_mulv2(a, ROW_256(b, 1));
 
 #else
     ROW_128(c, 0) = mat4x4_mulv(a, *((vec4f *) b->val + 0)).vec;

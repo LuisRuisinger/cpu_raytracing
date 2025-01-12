@@ -20,20 +20,20 @@ void mat4x4_inverse(const Mat4x4 *__restrict__ src, Mat4x4 *__restrict__ dst) {
     // 4x4 matrix vector and matrix multiplication
     // the current inverse implementation assumes a column-major 4x4 matrix
     // this fact itself is subject to change but currently of less priority
-    // because inverse itself is a costly function which isn't really used often
-    Mat4x4 t;
-    mat4x4_transpose(src, &t);
+    // because inverse itself is a costly function which isn'mat really used often
+    Mat4x4 mat;
+    mat4x4_transpose(src, &mat);
 
-    Mat2x2 a = { .row = _mm_movelh_ps(ROW_128(&t, 0), ROW_128(&t, 1)) };
-    Mat2x2 b = { .row = _mm_movehl_ps(ROW_128(&t, 1), ROW_128(&t, 0)) };
-    Mat2x2 c = { .row = _mm_movelh_ps(ROW_128(&t, 2), ROW_128(&t, 3)) };
-    Mat2x2 d = { .row = _mm_movehl_ps(ROW_128(&t, 3), ROW_128(&t, 2)) };
+    Mat2x2 a = { .row = _mm_movelh_ps(ROW_128(&mat, 0), ROW_128(&mat, 1)) };
+    Mat2x2 b = { .row = _mm_movehl_ps(ROW_128(&mat, 1), ROW_128(&mat, 0)) };
+    Mat2x2 c = { .row = _mm_movelh_ps(ROW_128(&mat, 2), ROW_128(&mat, 3)) };
+    Mat2x2 d = { .row = _mm_movehl_ps(ROW_128(&mat, 3), ROW_128(&mat, 2)) };
 
     // det
-    __m128 _tmp_0 = _mm_shuffle_ps(ROW_128(&t, 0), ROW_128(&t, 2), _MM_SHUFFLE(2, 0, 2, 0));
-    __m128 _tmp_1 = _mm_shuffle_ps(ROW_128(&t, 1), ROW_128(&t, 3), _MM_SHUFFLE(3, 1, 3, 1));
-    __m128 _tmp_2 = _mm_shuffle_ps(ROW_128(&t, 0), ROW_128(&t, 2), _MM_SHUFFLE(3, 1, 3, 1));
-    __m128 _tmp_3 = _mm_shuffle_ps(ROW_128(&t, 1), ROW_128(&t, 3), _MM_SHUFFLE(2, 0, 2, 0));
+    __m128 _tmp_0 = _mm_shuffle_ps(ROW_128(&mat, 0), ROW_128(&mat, 2), _MM_SHUFFLE(2, 0, 2, 0));
+    __m128 _tmp_1 = _mm_shuffle_ps(ROW_128(&mat, 1), ROW_128(&mat, 3), _MM_SHUFFLE(3, 1, 3, 1));
+    __m128 _tmp_2 = _mm_shuffle_ps(ROW_128(&mat, 0), ROW_128(&mat, 2), _MM_SHUFFLE(3, 1, 3, 1));
+    __m128 _tmp_3 = _mm_shuffle_ps(ROW_128(&mat, 1), ROW_128(&mat, 3), _MM_SHUFFLE(2, 0, 2, 0));
     __m128 _tmp_4 = _mm_sub_ps(_mm_mul_ps(_tmp_0, _tmp_1), _mm_mul_ps(_tmp_2, _tmp_3));
 
     __m128 _det_a = _mm_shuffle_ps(_tmp_4, _tmp_4, _MM_SHUFFLE(0, 0, 0, 0));
@@ -86,20 +86,20 @@ void mat4x4_inverse_tns(const Mat4x4 *__restrict__ src, Mat4x4 *__restrict__ dst
     // 4x4 matrix vector and matrix multiplication
     // the current inverse implementation assumes a column-major 4x4 matrix
     // this fact itself is subject to change but currently of less priority
-    // because inverse itself is a costly function which isn't really used often
-    Mat4x4 t;
-    mat4x4_transpose(src, &t);
+    // because inverse itself is a costly function which isn'mat really used often
+    Mat4x4 mat;
+    mat4x4_transpose(src, &mat);
 
-    Mat2x2 a = { .row = _mm_movelh_ps(ROW_128(&t, 0), ROW_128(&t, 1)) };
-    Mat2x2 b = { .row = _mm_movehl_ps(ROW_128(&t, 1), ROW_128(&t, 0)) };
+    Mat2x2 a = { .row = _mm_movelh_ps(ROW_128(&mat, 0), ROW_128(&mat, 1)) };
+    Mat2x2 b = { .row = _mm_movehl_ps(ROW_128(&mat, 1), ROW_128(&mat, 0)) };
 
-    ROW_128(dst, 0) = _mm_shuffle_ps(ROW_128(&a, 0), ROW_128(&t, 2), _MM_SHUFFLE(3, 0, 2, 0));
-    ROW_128(dst, 1) = _mm_shuffle_ps(ROW_128(&a, 0), ROW_128(&t, 2), _MM_SHUFFLE(3, 1, 3, 1));
-    ROW_128(dst, 2) = _mm_shuffle_ps(ROW_128(&b, 0), ROW_128(&t, 2), _MM_SHUFFLE(3, 2, 2, 0));
+    ROW_128(dst, 0) = _mm_shuffle_ps(ROW_128(&a, 0), ROW_128(&mat, 2), _MM_SHUFFLE(3, 0, 2, 0));
+    ROW_128(dst, 1) = _mm_shuffle_ps(ROW_128(&a, 0), ROW_128(&mat, 2), _MM_SHUFFLE(3, 1, 3, 1));
+    ROW_128(dst, 2) = _mm_shuffle_ps(ROW_128(&b, 0), ROW_128(&mat, 2), _MM_SHUFFLE(3, 2, 2, 0));
 
-    __m128 _tmp_0 = _mm_shuffle_epi32(_mm_castps_si128(ROW_128(&t, 0)), _MM_SHUFFLE(0, 0, 0, 0));
-    __m128 _tmp_1 = _mm_shuffle_epi32(_mm_castps_si128(ROW_128(&t, 0)), _MM_SHUFFLE(1, 1, 1, 1));
-    __m128 _tmp_2 = _mm_shuffle_epi32(_mm_castps_si128(ROW_128(&t, 0)), _MM_SHUFFLE(2, 2, 2, 2));
+    __m128 _tmp_0 = _mm_shuffle_epi32(_mm_castps_si128(ROW_128(&mat, 0)), _MM_SHUFFLE(0, 0, 0, 0));
+    __m128 _tmp_1 = _mm_shuffle_epi32(_mm_castps_si128(ROW_128(&mat, 0)), _MM_SHUFFLE(1, 1, 1, 1));
+    __m128 _tmp_2 = _mm_shuffle_epi32(_mm_castps_si128(ROW_128(&mat, 0)), _MM_SHUFFLE(2, 2, 2, 2));
 
     _tmp_0 = _mm_mul_ps(ROW_128(dst, 0), _mm_castsi128_ps(_tmp_0));
     _tmp_1 = _mm_mul_ps(ROW_128(dst, 1), _mm_castsi128_ps(_tmp_1));
@@ -115,16 +115,16 @@ void mat4x4_inverse_t(const Mat4x4 *__restrict__ src, Mat4x4 *__restrict__ dst) 
     // 4x4 matrix vector and matrix multiplication
     // the current inverse implementation assumes a column-major 4x4 matrix
     // this fact itself is subject to change but currently of less priority
-    // because inverse itself is a costly function which isn't really used often
-    Mat4x4 t;
-    mat4x4_transpose(src, &t);
+    // because inverse itself is a costly function which isn'mat really used often
+    Mat4x4 mat;
+    mat4x4_transpose(src, &mat);
 
-    Mat2x2 a = { .row = _mm_movelh_ps(ROW_128(&t, 0), ROW_128(&t, 1)) };
-    Mat2x2 b = { .row = _mm_movehl_ps(ROW_128(&t, 1), ROW_128(&t, 0)) };
+    Mat2x2 a = { .row = _mm_movelh_ps(ROW_128(&mat, 0), ROW_128(&mat, 1)) };
+    Mat2x2 b = { .row = _mm_movehl_ps(ROW_128(&mat, 1), ROW_128(&mat, 0)) };
 
-    ROW_128(dst, 0) = _mm_shuffle_ps(ROW_128(&a, 0), ROW_128(&t, 2), _MM_SHUFFLE(3, 0, 2, 0));
-    ROW_128(dst, 1) = _mm_shuffle_ps(ROW_128(&a, 0), ROW_128(&t, 2), _MM_SHUFFLE(3, 1, 3, 1));
-    ROW_128(dst, 2) = _mm_shuffle_ps(ROW_128(&b, 0), ROW_128(&t, 2), _MM_SHUFFLE(3, 2, 2, 0));
+    ROW_128(dst, 0) = _mm_shuffle_ps(ROW_128(&a, 0), ROW_128(&mat, 2), _MM_SHUFFLE(3, 0, 2, 0));
+    ROW_128(dst, 1) = _mm_shuffle_ps(ROW_128(&a, 0), ROW_128(&mat, 2), _MM_SHUFFLE(3, 1, 3, 1));
+    ROW_128(dst, 2) = _mm_shuffle_ps(ROW_128(&b, 0), ROW_128(&mat, 2), _MM_SHUFFLE(3, 2, 2, 0));
 
     __m128 _tmp_0 = _mm_mul_ps(ROW_128(dst, 0), ROW_128(dst, 0));
     _tmp_0 = _mm_add_ps(_tmp_0, _mm_mul_ps(ROW_128(dst, 1), ROW_128(dst, 1)));
@@ -139,9 +139,9 @@ void mat4x4_inverse_t(const Mat4x4 *__restrict__ src, Mat4x4 *__restrict__ dst) 
     ROW_128(dst, 2) = _mm_mul_ps(ROW_128(dst, 2), _tmp_2);
 
 
-    __m128 _tmp_3 = _mm_shuffle_epi32(_mm_castps_si128(ROW_128(&t, 0)), _MM_SHUFFLE(0, 0, 0, 0));
-    __m128 _tmp_4 = _mm_shuffle_epi32(_mm_castps_si128(ROW_128(&t, 0)), _MM_SHUFFLE(1, 1, 1, 1));
-    __m128 _tmp_5 = _mm_shuffle_epi32(_mm_castps_si128(ROW_128(&t, 0)), _MM_SHUFFLE(2, 2, 2, 2));
+    __m128 _tmp_3 = _mm_shuffle_epi32(_mm_castps_si128(ROW_128(&mat, 0)), _MM_SHUFFLE(0, 0, 0, 0));
+    __m128 _tmp_4 = _mm_shuffle_epi32(_mm_castps_si128(ROW_128(&mat, 0)), _MM_SHUFFLE(1, 1, 1, 1));
+    __m128 _tmp_5 = _mm_shuffle_epi32(_mm_castps_si128(ROW_128(&mat, 0)), _MM_SHUFFLE(2, 2, 2, 2));
 
     _tmp_3 = _mm_mul_ps(ROW_128(dst, 0), _mm_castsi128_ps(_tmp_3));
     _tmp_4 = _mm_mul_ps(ROW_128(dst, 1), _mm_castsi128_ps(_tmp_4));
