@@ -46,13 +46,13 @@ typedef struct Mat4x4_t {
 #define ROW_128(mat, i) \
     *((__m128*) &(mat)->val + i)
 
-ALWAYS_INLINE static Mat2x2 mat2x2_identity() {
+ALWAYS_INLINE static Mat2x2 mat2x2_identity(void) {
 
     // this does not care about row-major / column-major ordering
     return (Mat2x2) { .row = _mm_set_ps(1.0F, 0.0F, 0.0F, 1.0F) };
 }
 
-ALWAYS_INLINE static Mat4x4 mat4x4_identity() {
+ALWAYS_INLINE static Mat4x4 mat4x4_identity(void) {
 #if defined(__AVX512F__)
     Mat4x4 mat;
 
@@ -104,7 +104,7 @@ ALWAYS_INLINE static vec2f mat2x2_mulv(const Mat2x2 *__restrict__ src, vec2f v) 
     return (vec2f) {
         .x = _mm_cvtss_f32(_tmp_1),
         .y = _mm_cvtss_f32(_mm_movehl_ps(_tmp_1, _tmp_1))
-    }
+    };
 }
 
 ALWAYS_INLINE static void mat2x2_mulm(
@@ -188,14 +188,14 @@ ALWAYS_INLINE static void mat4x4_transpose(
 }
 
 ALWAYS_INLINE static vec4f mat4x4_mulv(const Mat4x4 *__restrict__ mat, vec4f v) {
-#if defined(__AVX512F__)
-#elif defined(__AVX2__)
-    __m256 _tmp_0 = _mm256_set_m128(_mm_set1_ps(GET_VEC4_X(v)), _mm_set1_ps(GET_VEC4_Y(v)));
-    __m256 _tmp_1 = _mm256_set_m128(_mm_set1_ps(GET_VEC4_Z(v)), _mm_set1_ps(GET_VEC4_W(v)));
+#if defined(__AVX2__)
+    __m256 _tmp_0 = _mm256_set_m128(_mm_set1_ps(GET_VEC4_Y(v)), _mm_set1_ps(GET_VEC4_X(v)));
+    __m256 _tmp_1 = _mm256_set_m128(_mm_set1_ps(GET_VEC4_W(v)), _mm_set1_ps(GET_VEC4_Z(v)));
     __m256 _tmp_2 = _mm256_mul_ps(ROW_256(mat, 0), _tmp_0);
     __m256 _tmp_3 = _mm256_mul_ps(ROW_256(mat, 1), _tmp_1);
     __m256 _tmp_4 = _mm256_add_ps(_tmp_2, _tmp_3);
 
+    // combined multiplication for the first 2 rows and the last 2 rows
     __m128 _tmp_5 = _mm_add_ps(_mm256_extractf128_ps(_tmp_4, 1), _mm256_castps256_ps128(_tmp_4));
     return (vec4f) { .vec = _tmp_5 };
 
@@ -211,22 +211,6 @@ ALWAYS_INLINE static vec4f mat4x4_mulv(const Mat4x4 *__restrict__ mat, vec4f v) 
 #endif
 }
 
-#if defined(__AVX512F__)
-ALWAYS_INLINE static __m512 mat4x4_mulv4(const Mat4x4 *__restrict__ mat, __m512 pv) {
-    __m512 _tmp_0 = _mm512_shuffle_epi32(_mm512_castps_si512(pv), _MM_SHUFFLE(0, 0, 0, 0));
-    __m512 _tmp_1 = _mm512_shuffle_epi32(_mm512_castps_si512(pv), _MM_SHUFFLE(1, 1, 1, 1));
-    __m512 _tmp_2 = _mm512_shuffle_epi32(_mm512_castps_si512(pv), _MM_SHUFFLE(2, 2, 2, 2));
-    __m512 _tmp_3 = _mm512_shuffle_epi32(_mm512_castps_si512(pv), _MM_SHUFFLE(3, 3, 3, 3));
-
-    __m512 _tmp_4 = _mm512_mul_ps(ROW_512(mat, 0), _tmp_0);
-    __m512 _tmp_5 = _mm512_mul_ps(ROW_512(mat, 1), _tmp_1);
-    __m512 _tmp_6 = _mm512_mul_ps(ROW_512(mat, 2), _tmp_2);
-    __m512 _tmp_7 = _mm512_mul_ps(ROW_512(mat, 3), _tmp_3);
-
-    return _mm512_add_ps(_mm512_add_ps(_tmp_4, _tmp_5), _mm512_add_ps(_tmp_6, _tmp_7));
-}
-#endif
-
 #if defined(__AVX2__)
 ALWAYS_INLINE static __m256 mat4x4_mulv2(const Mat4x4 *__restrict__ mat, __m256 pv) {
     __m256 _tmp_0 = _mm256_shuffle_epi32(_mm256_castps_si256(pv), _MM_SHUFFLE(0, 0, 0, 0));
@@ -234,10 +218,10 @@ ALWAYS_INLINE static __m256 mat4x4_mulv2(const Mat4x4 *__restrict__ mat, __m256 
     __m256 _tmp_2 = _mm256_shuffle_epi32(_mm256_castps_si256(pv), _MM_SHUFFLE(2, 2, 2, 2));
     __m256 _tmp_3 = _mm256_shuffle_epi32(_mm256_castps_si256(pv), _MM_SHUFFLE(3, 3, 3, 3));
 
-    __m256 _tmp_4 = _mm256_mul_ps(ROW_256(mat, 0), _tmp_0);
-    __m256 _tmp_5 = _mm256_mul_ps(ROW_256(mat, 1), _tmp_1);
-    __m256 _tmp_6 = _mm256_mul_ps(ROW_256(mat, 2), _tmp_2);
-    __m256 _tmp_7 = _mm256_mul_ps(ROW_256(mat, 3), _tmp_3);
+    __m256 _tmp_4 = _mm256_mul_ps(ROW_256(mat, 0), _mm256_castsi256_ps(_tmp_0));
+    __m256 _tmp_5 = _mm256_mul_ps(ROW_256(mat, 0), _mm256_castsi256_ps(_tmp_1));
+    __m256 _tmp_6 = _mm256_mul_ps(ROW_256(mat, 1), _mm256_castsi256_ps(_tmp_2));
+    __m256 _tmp_7 = _mm256_mul_ps(ROW_256(mat, 1), _mm256_castsi256_ps(_tmp_3));
 
     return _mm256_add_ps(_mm256_add_ps(_tmp_4, _tmp_5), _mm256_add_ps(_tmp_6, _tmp_7));
 }
@@ -249,10 +233,7 @@ ALWAYS_INLINE static void mat4x4_mulm(
     // 4x4 matrices are stored in row-major order rather than column-major to speed up
     // 4x4 matrix vector and matrix multiplication
     // this implies that b itself doesn't need to be transposed to linearize the multiplication
-#if defined(__AVX512F__)
-    ROW_512(c, 0) = mat4x4_mulv4(a, ROW_512(b, 0));
-
-#elif defined(__AVX2__)
+#if defined(__AVX2__)
     ROW_256(c, 0) = mat4x4_mulv2(a, ROW_256(b, 0));
     ROW_256(c, 1) = mat4x4_mulv2(a, ROW_256(b, 1));
 
