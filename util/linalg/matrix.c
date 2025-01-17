@@ -5,7 +5,7 @@
 #include "matrix.h"
 
 void mat2x2_inverse(const Mat2x2 *__restrict__ src, Mat2x2 *__restrict__ dst) {
-    f32 s = 1.0F / ((src->val[0] * src->val[3]) - (src->val[1] * src->val[2]));
+    f32 s = 1.0F / mat2x2_det(src);
 
     // this is strictly speaking wrong because we store 2 rows inside of one __m128
     // compared to a 4x4 matrix where one __m128 is exactly one row
