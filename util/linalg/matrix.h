@@ -94,10 +94,7 @@ ALWAYS_INLINE static void mat2x2_muls(
 
 ALWAYS_INLINE static vec2f mat2x2_mulv(const Mat2x2 *__restrict__ src, vec2f v) {
     __m128 _tmp_0 = _mm_shuffle_ps(ROW_128(src, 0), ROW_128(src, 0), _MM_SHUFFLE(3, 1, 2, 0));
-
-    f32 x = GET_VEC2_X(v);
-    f32 y = GET_VEC2_Y(v);
-    __m128 _tmp_1 = _mm_set_ps(x, y, x, y);
+    __m128 _tmp_1 = _mm_set_ps(GET_VEC2_X(v), GET_VEC2_Y(v), GET_VEC2_X(v), GET_VEC2_Y(v));
     _tmp_1 = _mm_mul_ps(_tmp_0, _tmp_1);
     _tmp_1 = _mm_hadd_ps(_tmp_1, _tmp_1);
 
@@ -187,6 +184,7 @@ ALWAYS_INLINE static void mat4x4_transpose(
     ROW_128(dst, 3) = _mm_shuffle_ps(_tmp_1, _tmp_3, 0xDD);
 }
 
+/* TODO test if the __AVX2__ variant is actually slower */
 ALWAYS_INLINE static vec4f mat4x4_mulv(const Mat4x4 *__restrict__ mat, vec4f v) {
 #if defined(__AVX2__)
     __m256 _tmp_0 = _mm256_set_m128(_mm_set1_ps(GET_VEC4_Y(v)), _mm_set1_ps(GET_VEC4_X(v)));
@@ -227,13 +225,38 @@ ALWAYS_INLINE static __m256 mat4x4_mulv2(const Mat4x4 *__restrict__ mat, __m256 
 }
 #endif
 
+#if defined(__AVX512F__)
+ALWAYS_INLINE static __m512 mat4x4_mulv4(const Mat4x4 *__restrict__ mat, __m512 pv) {
+    __m512 _tmp_0 = _mm512_shuffle_epi32(_mm512_castps_si512(pv), _MM_SHUFFLE(0, 0, 0, 0));
+    __m512 _tmp_1 = _mm512_shuffle_epi32(_mm512_castps_si512(pv), _MM_SHUFFLE(1, 1, 1, 1));
+    __m512 _tmp_2 = _mm512_shuffle_epi32(_mm512_castps_si512(pv), _MM_SHUFFLE(2, 2, 2, 2));
+    __m512 _tmp_3 = _mm512_shuffle_epi32(_mm512_castps_si512(pv), _MM_SHUFFLE(3, 3, 3, 3));
+
+    __m512 _tmp_4 = _mm512_castps256_ps512(ROW_256(mat, 0));
+    _tmp_4 = _mm512_inserti64x4(_tmp_4, _mm256_castps_si256(ROW_256(mat, 0)), 1);
+
+    __m512 _tmp_5 = _mm512_castps256_ps512(ROW_256(mat, 1));
+    _tmp_5 = _mm512_inserti64x4(_tmp_5, _mm256_castps_si256(ROW_256(mat, 1)), 1);
+
+    __m512 _tmp_6 = _mm512_mul_ps(_mm512_castsi512_ps(_tmp_4), _mm512_castsi512_ps(_tmp_0));
+    __m512 _tmp_7 = _mm512_mul_ps(_mm512_castsi512_ps(_tmp_4), _mm512_castsi512_ps(_tmp_1));
+    __m512 _tmp_8 = _mm512_mul_ps(_mm512_castsi512_ps(_tmp_5), _mm512_castsi512_ps(_tmp_2));
+    __m512 _tmp_9 = _mm512_mul_ps(_mm512_castsi512_ps(_tmp_5), _mm512_castsi512_ps(_tmp_3));
+
+    return _mm512_add_ps(_mm512_add_ps(_tmp_6, _tmp_7), _mm512_add_ps(_tmp_8, _tmp_9));
+}
+#endif
+
 ALWAYS_INLINE static void mat4x4_mulm(
         const Mat4x4 *__restrict__ a, const Mat4x4 *__restrict__ b, Mat4x4 *__restrict__ c) {
 
     // 4x4 matrices are stored in row-major order rather than column-major to speed up
     // 4x4 matrix vector and matrix multiplication
     // this implies that b itself doesn't need to be transposed to linearize the multiplication
-#if defined(__AVX2__)
+#if defined(__AVX512F__)
+    ROW_512(c, 0) = mat4x4_mulv4(a, ROW_512(b, 0));
+
+#elif defined(__AVX2__)
     ROW_256(c, 0) = mat4x4_mulv2(a, ROW_256(b, 0));
     ROW_256(c, 1) = mat4x4_mulv2(a, ROW_256(b, 1));
 
