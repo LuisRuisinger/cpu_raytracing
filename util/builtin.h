@@ -99,24 +99,24 @@ typedef ssize_t  ssize;
 #if defined(CPU_RAYTRACING_GNUC_CLANG) && \
     CPU_RAYTRACING_HAS_BUILTIN(__builtin_clz) && CPU_RAYTRACING_HAS_BUILTIN(__builtin_clzll)
 
-    ALWAYS_INLINE static i32 cr_clz_u8(u8 x) {
+    ALWAYS_INLINE static inline i32 cr_clz_u8(u8 x) {
         return __builtin_clz(x) - (i32) ((sizeof(u32) - sizeof(u8)) * 8);
     }
 
-    ALWAYS_INLINE static i32 cr_clz_u16(u16 x) {
+    ALWAYS_INLINE static inline i32 cr_clz_u16(u16 x) {
         return __builtin_clz(x) - (i32) ((sizeof(u32) - sizeof(u16)) * 8);
     }
 
-    ALWAYS_INLINE static i32 cr_clz_u32(u32 x) {
+    ALWAYS_INLINE static inline i32 cr_clz_u32(u32 x) {
         return __builtin_clz(x);
     }
 
-    ALWAYS_INLINE static i32 cr_clz_u64(u64 x) {
+    ALWAYS_INLINE static inline i32 cr_clz_u64(u64 x) {
         return __builtin_clzll(x);
     }
 #else
     // src https://stackoverflow.com/a/23862121
-    ALWAYS_INLINE static i32 clz(u32 x) {
+    ALWAYS_INLINE static inline i32 clz(u32 x) {
         static const u8 debruijn_32[32] = {
                 0, 31, 9, 30, 3, 8, 13, 29, 2, 5, 7, 21, 12, 24, 28, 19,
                 1, 10, 4, 14, 6, 22, 25, 20, 11, 15, 23, 26, 16, 27, 17, 18
@@ -137,19 +137,19 @@ typedef ssize_t  ssize;
         return debruijn_32[x * 0x076be629 >> 27];
     }
 
-    ALWAYS_INLINE static i32 cr_clz_u8(u8 x) {
+    ALWAYS_INLINE static inline i32 cr_clz_u8(u8 x) {
         return clz(x) - (i32) ((sizeof(u32) - sizeof(u8)) * 8);
     }
 
-    ALWAYS_INLINE static i32 cr_clz_u16(u16 x) {
+    ALWAYS_INLINE static inline i32 cr_clz_u16(u16 x) {
         return clz(x) - (i32) ((sizeof(u32) - sizeof(u16)) * 8);
     }
 
-    ALWAYS_INLINE static i32 cr_clz_u32(u32 x) {
+    ALWAYS_INLINE static inline i32 cr_clz_u32(u32 x) {
         return clz(x);
     }
 
-    ALWAYS_INLINE static i32 cr_clz_u64(u64 x) {
+    ALWAYS_INLINE static inline i32 cr_clz_u64(u64 x) {
         i32 upper = clz(x >> 32);
         return upper ? upper : clz((u32) x);
     }

@@ -33,6 +33,21 @@ C_GUARD_BEGINN()
 #define FAST_MOD_POW2(num, mod) \
     ((num) & (mod - 1))
 
+// IEEE 754
+#define MANTISSA_LEN 23
+#define EXPONENT_LEN 8
+#define COMPARATOR_F32(_a, _b, _r)                                                                \
+    do {                                                                                          \
+        union {                                                                                   \
+            f32 f; u32 u;                                                                         \
+        } cast = { .f = (_a) - (_b) };                                                            \
+                                                                                                  \
+        *(_r) =                                                                                   \
+            -!!(cast.u & (1 << (MANTISSA_LEN + EXPONENT_LEN))) |                                  \
+            !!((u8) (cast.u >> MANTISSA_LEN));                                                    \
+    }                                                                                             \
+    while (0)
+
 static ALWAYS_INLINE f32 get128_reload(__m128 a, i32 i) {
     alignas(16) f32 tmp[8];
     _mm_store_ps(tmp, a);
