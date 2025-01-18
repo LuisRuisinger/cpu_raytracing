@@ -112,12 +112,16 @@ __m256 ray_triangle_intersection(const BVH_Ray *restrict ray, const BVH_Node *re
  * @param  _a Single-precision float vector.
  * @return __m256 vector containing the smallest single-precision float
  */
-static ALWAYS_INLINE __m256 _mm256_broadcastminss_ps(__m256 _a) {
-    __m256 tmp_0 = _mm256_shuffle_ps(_a, _a, _MM_SHUFFLE(2, 1, 0, 3));
-    __m256 tmp_1 = _mm256_min_ps(_a, tmp_0);
-    __m256 tmp_2 = _mm256_shuffle_ps(tmp_1, tmp_1, _MM_SHUFFLE(1, 0, 3, 2));
+ALWAYS_INLINE static inline __m256 _mm256_broadcastminss_ps(__m256 _a) {
+    __m256 _tmp_0 = _mm256_permute_ps(_a, 0b10110001);
+    __m256 _tmp_1 = _mm256_min_ps(_a, _tmp_0);
+    __m256 _tmp_2 = _mm256_permute_ps(_tmp_1, 0b01001110);
+    __m256 _tmp_3 = _mm256_min_ps(_tmp_1, _tmp_2);
 
-    return _mm256_min_ps(tmp_1, tmp_2);
+    /* TODO: the following line only compiles for AVX2 and not AVX or below */
+    __m256 _tmp_4 = _mm256_castpd_ps(_mm256_permute4x64_pd(_mm256_castps_pd(_tmp_3), 0b01001110));
+
+    return  _mm256_min_ps(_tmp_3, _tmp_4);
 }
 
 /**
@@ -130,54 +134,46 @@ static ALWAYS_INLINE __m256 _mm256_broadcastminss_ps(__m256 _a) {
  * @return Distance between the ray origin and the intersected triangle.
  *         Falls back to NO_INTERSECTION in case no intersection occured.
  */
-f32 traverse(const BVH_Node *restrict ray, const BVH_Node *restrict node, Triangle *hit) {
-    f32 scale = NO_INTERSECTION;
-
+f32 traverse(const BVH_Ray *__restrict__ ray, const BVH_Node *__restrict__ node, Triangle **hit) {
     if (__builtin_expect(GET_LEAF(node), 0)) {
-        __m256 _hits = ray_triangle_intersection((const BVH_Ray *restrict) ray, node);
+        __m256 _hits = ray_triangle_intersection(ray, node);
 
         /// finding the smallest float and its index
         __m256 _tmp_0 = _mm256_broadcastminss_ps(_hits);
         __m256 _tmp_1 = _mm256_cmp_ps(_hits, _tmp_0, _CMP_EQ_OQ);
 
         // retrieving the index of the smallest float
-        u8 mask = (u8) _mm256_movemask_ps(_tmp_1);
-        u8 idx = (u8) CPU_RAYTRACING_CLZ(mask);
+        i32 idx = __builtin_ctz(_mm256_movemask_ps(_tmp_1));
+        *hit = &ARRAY_ELEMENT(triangle_buffer, idx + node->packed_0);
 
-        // because hit never gets tested and _tmp_3 contains the smallest float
-        // which could be NO_INTERSECTION aka INFINITY
-        // we do not need to validate a hit
-
-        hit = &ARRAY_ELEMENT(triangle_buffer, idx + node->packed_0);
-        scale = _mm256_cvtss_f32(_tmp_0);
+        // the hit distance is broadcast as min value
+        return _mm256_cvtss_f32(_tmp_0);
     }
     else {
-        __m256 _hits = ray_node_intersection((const BVH_Ray *restrict) ray, node);
+        __m256 _hits = ray_node_intersection(ray, node);
         __m256 _tmp_0 = _mm256_cmp_ps(_hits, _mm256_set1_ps(NO_INTERSECTION), _CMP_LT_OQ);
 
         // counting total amount of traversable elements
-        u8 mask_eq = (u8) _mm256_movemask_ps(_tmp_0);
-        u8 max = (u8) __builtin_ctz(mask_eq);
+        i32 max = __builtin_popcount(_mm256_movemask_ps(_tmp_0));
+        f32 scale = NO_INTERSECTION;
 
-        for (usize i = 0; i < max && scale == NO_INTERSECTION; ++i) {
-
-            // finding the current smallest float and its index
+        for (i32 i = 0; i < max && scale == NO_INTERSECTION; ++i) {
             __m256 _tmp_1 = _mm256_broadcastminss_ps(_hits);
             __m256 _tmp_2 = _mm256_cmp_ps(_hits, _tmp_1, _CMP_EQ_OQ);
 
-            // masking off the current smallest float
-            _hits = _mm256_blendv_ps(_hits, _tmp_1, _tmp_2);
+            // index where the nearest intersection resides
+            i32 idx = __builtin_ctz(_mm256_movemask_ps(_tmp_2));
 
-            // retrieving the index of the smallest float
-            u8 mask = (u8) _mm256_movemask_ps(_tmp_2);
-            u8 idx = (u8) CPU_RAYTRACING_CLZ(mask);
+            // masking off the nearest intersection
+            _hits = _mm256_blendv_ps(_hits, _mm256_set1_ps(NO_INTERSECTION), _tmp_2);
 
+            // relative child node to be traversed
             BVH_Node *next = &ARRAY_ELEMENT(aabb_buffer, idx + node->packed_0);
             scale = traverse(ray, next, hit);
         }
-    }
 
-    return scale;
+        return scale;
+    }
 }
 
 // struct Tri { float3 vertex0, vertex1, vertex2; float3 centroid; };
