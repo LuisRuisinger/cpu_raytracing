@@ -11,13 +11,31 @@
 
 #include "../model/polygon.h"
 
+#if defined(__AVX512__)
+    #define SOA_ALIGNMENT sizeof(__m512)
+#elif defined(__AVX2__)
+    #define SOA_ALIGNMENT sizeof(__m256)
+#else
+    #define SOA_ALIGNMENT sizeof(__m128)
+#endif
+
 C_GUARD_BEGINN()
 
 /**
- * Packed SOA representation of 8 triangles.
+ * Packed SOA representation of 4/8/16 triangles.
  */
 typedef struct BVH_Triangles_t {
+#if defined(__AVX512F__)
+    // two edges of each triangle needed for the vec3_cross product
+    // split up in x, y and z
+    __m512 _edge_0[DIMENSIONS];
+    __m512 _edge_1[DIMENSIONS];
 
+    // first point of each triangle
+    // split up in x, y and z
+    __m512 _point_a[DIMENSIONS];
+
+#elif defined(__AVX2__)
     // two edges of each triangle needed for the vec3_cross product
     // split up in x, y and z
     __m256 _edge_0[DIMENSIONS];
@@ -26,22 +44,47 @@ typedef struct BVH_Triangles_t {
     // first point of each triangle
     // split up in x, y and z
     __m256 _point_a[DIMENSIONS];
-} __attribute__((aligned(ALIGNMENT_256))) BVH_Triangles;
+
+#else
+    // two edges of each triangle needed for the vec3_cross product
+    // split up in x, y and z
+    __m128 _edge_0[DIMENSIONS];
+    __m128 _edge_1[DIMENSIONS];
+
+    // first point of each triangle
+    // split up in x, y and z
+    __m128 _point_a[DIMENSIONS];
+#endif
+} __attribute__((aligned(SOA_ALIGNMENT))) BVH_Triangles;
 
 
 
 
 
 /**
- * Packed SOA representation of 8 aabbs.
+ * Packed SOA representation of 4/8/16 AABBs.
  */
 typedef struct BVH_AABBs_t {
+#if defined(__AVX512F__)
+    // all x,y and z parts of the vectors are packed together
+    // allows processing of 4 nodes aabb nodes at the same time
+    __m512 _min[DIMENSIONS];
+    __m512 _max[DIMENSIONS];
 
+#elif defined(__AVX2__)
     // all x,y and z parts of the vectors are packed together
     // allows processing of 8 nodes aabb nodes at the same time
     __m256 _min[DIMENSIONS];
     __m256 _max[DIMENSIONS];
-} __attribute__((aligned(ALIGNMENT_256))) BVH_AABBs;
+
+#else
+    // all x,y and z parts of the vectors are packed together
+    // allows processing of 16 nodes aabb nodes at the same time
+    __m128 _min[DIMENSIONS];
+    __m128 _max[DIMENSIONS];
+
+#endif
+} __attribute__((aligned(SOA_ALIGNMENT))) BVH_AABBs;
 
 
 
@@ -67,7 +110,7 @@ typedef struct BVH_Node_t {
         BVH_AABBs     aabbs;
         BVH_Triangles triangles;
     };
-} __attribute__((aligned(ALIGNMENT_256))) BVH_Node;
+} __attribute__((aligned(SOA_ALIGNMENT))) BVH_Node;
 
 #define LEAF_MASK (1UL << 3)
 #define NODE_CNT_MASK 7UL
@@ -95,7 +138,17 @@ typedef struct BVH_Node_t {
  * a ray into another representation at each intersection calculation.
  */
 typedef struct BVH_Ray_T {
+#if defined(__AVX512F__)
+    // all x,y and z parts of the vectors are packed together
+    // each vec3f is repeated 16 times
+    // allows processing of 16 nodes aabb nodes at the same time
+    __m512 _org[DIMENSIONS];
+    __m512 _dir[DIMENSIONS];
 
+    // precomputed vec3_inverse direction
+    __m512 _inv_dir[DIMENSIONS];
+
+#elif defined(__AVX2__)
     // all x,y and z parts of the vectors are packed together
     // each vec3f is repeated 8 times
     // allows processing of 8 nodes aabb nodes at the same time
@@ -104,26 +157,20 @@ typedef struct BVH_Ray_T {
 
     // precomputed vec3_inverse direction
     __m256 _inv_dir[DIMENSIONS];
-} __attribute__((aligned(ALIGNMENT_256))) BVH_Ray;
 
-#define BVH_RAY(org_vec, dir_vec, inv_dir_vec)                                                    \
-    (BVH_Ray) {                                                                                   \
-        ._org = {                                                                                 \
-            _mm256_set1_ps(GET_VEC3_X(org_vec)),                                                   \
-            _mm256_set1_ps(GET_VEC3_Y(org_vec)),                                                   \
-            _mm256_set1_ps(GET_VEC3_Z(org_vec))                                                    \
-        },                                                                                        \
-        ._dir = {                                                                                 \
-            _mm256_set1_ps(GET_VEC3_X(dir_vec)),                                                   \
-            _mm256_set1_ps(GET_VEC3_Y(dir_vec)),                                                   \
-            _mm256_set1_ps(GET_VEC3_Z(dir_vec))                                                    \
-        },                                                                                        \
-        ._inv_dir = {                                                                             \
-            _mm256_set1_ps(GET_VEC3_X(inv_dir_vec)),                                               \
-            _mm256_set1_ps(GET_VEC3_Y(inv_dir_vec)),                                               \
-            _mm256_set1_ps(GET_VEC3_Z(inv_dir_vec))                                                \
-        }                                                                                         \
-    }
+#else
+    // all x,y and z parts of the vectors are packed together
+    // each vec3f is repeated 4 times
+    // allows processing of 4 nodes aabb nodes at the same time
+    __m128 _org[DIMENSIONS];
+    __m128 _dir[DIMENSIONS];
+
+    // precomputed vec3_inverse direction
+    __m128 _inv_dir[DIMENSIONS];
+
+#endif
+} __attribute__((aligned(SOA_ALIGNMENT))) BVH_Ray;
+
 
 
 
