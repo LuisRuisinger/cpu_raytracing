@@ -97,9 +97,7 @@ vec3f ray_aabb_intersection_distance(const Ray *ray, const AABB *aabb) {
     __m128 tmp_3 = _mm_max_ps(tmp_0_min, tmp_1_min);
     __m128 tmp_4 = _mm_cmp_ps(tmp_2, tmp_3, _CMP_LE_OQ);
 
-    return (vec3f) {
-        .vec = _mm_blendv_ps(t_max_vec, tmp_2, tmp_4)
-    };
+    return (vec3f) { .vec = _mm_blendv_ps(t_max_vec, tmp_2, tmp_4) };
 }
 
 void aabb_grow_vec(AABB *aabb, vec3f v) {
@@ -113,11 +111,10 @@ void aabb_grow_aabb(AABB *aabb, const AABB *other) {
 }
 
 f32 aabb_area(const AABB *aabb) {
-    vec3f d = vec3_sub(aabb->max, aabb->min);
+    vec3f v = vec3_sub(aabb->max, aabb->min);
 
-    f32 x = GET_VEC3_X(d);
-    f32 y = GET_VEC3_Y(d);
-    f32 z = GET_VEC3_Z(d);
+    __m128 _tmp_0 = _mm_shuffle_epi32(_mm_castps_si128(v.vec), _MM_SHUFFLE(3, 1, 2, 0));;
+    vec3f w = (vec3f) { .vec = _mm_castsi128_ps(_tmp_0) };
 
-    return x * y + y * z + z * x;
+    return vec3_hsum(vec3_mul(v, w));
 }

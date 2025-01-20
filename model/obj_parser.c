@@ -16,12 +16,12 @@
 #include "../util/fast_obj/fast_obj.h"
 
 i32 parse(const char *file, TriangleArr *arr) {\
-    fastObjMesh *mesh = fast_obj_read("../model/test/cube.obj");
+    fastObjMesh *mesh = fast_obj_read(file);
     if (!mesh) {
         return -1;
     }
 
-    ARRAY_INIT(*arr, mesh->index_count / 3);
+    LOG("parser backend finished");
 
     for (usize i = 0; i < mesh->index_count; i += 3) {
         Triangle triangle = { 0 };

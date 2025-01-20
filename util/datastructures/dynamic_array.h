@@ -9,6 +9,7 @@
 #include <string.h>
 
 #include "../defines.h"
+#include "../fmt.h"
 
 C_GUARD_BEGINN()
 
@@ -53,9 +54,10 @@ typedef ARRAY(signed char)   schar_array;
     #define LEAST_ALLOC_SIZE 0x20
 #endif
 
+// if 0 then LEAST_ALLOC
 #define ARRAY_NEXT_ALLOC(_cap)                                                                    \
     do {                                                                                          \
-        usize __cap = MAX(*(_cap) | 1, LEAST_ALLOC_SIZE - 1);                        \
+        usize __cap = MAX(*(_cap) - 1, LEAST_ALLOC_SIZE - 1);                                     \
         __cap |= __cap >> 1;                                                                      \
         __cap |= __cap >> 2;                                                                      \
         __cap |= __cap >> 4;                                                                      \
@@ -69,12 +71,8 @@ typedef ARRAY(signed char)   schar_array;
     while (0)
 
 #ifndef ARRAY_ALLOC
-    #define ARRAY_ALLOC(_arr, _cap)                                                               \
-        do {                                                                                      \
-            usize _align = _Alignof(*(_arr).mem);                                    \
-            (_arr).mem = aligned_alloc(_align, sizeof(*(_arr).mem) * (_cap));                     \
-        }                                                                                         \
-        while (0)
+    #define ARRAY_ALLOC(_arr, _cap) \
+        do { (_arr).mem = malloc(sizeof(ARRAY_TYPEOF(_arr)) * (_cap)); } while (0)
 #endif
 
 #ifndef ARRAY_FREE
@@ -95,19 +93,20 @@ typedef ARRAY(signed char)   schar_array;
     while (0)
 
 #ifndef ARRAY_REALLOC_FACTOR
+
+    // factor on which the underlying continous space is considered full
+    // this should never be greater than 1.0 or near to/smaller than 0
     #define ARRAY_REALLOC_FACTOR 1.0F
 #endif
 
 #ifndef ARRAY_REALLOC
     #define ARRAY_REALLOC(_arr, _cap)                                                             \
         do {                                                                                      \
-            usize _align = _Alignof(*(_arr).mem);                                    \
-            usize __cap = MIN(_cap, (_arr).capacity);                                \
                                                                                                   \
-            (_arr).size = MIN(__cap, (_arr).size);                                                \
+            (_arr).size = MIN(_cap, (_arr).size);                                                 \
             (_arr).capacity = _cap;                                                               \
                                                                                                   \
-            void *_ptr = (u8 *) aligned_alloc(_align, sizeof(*(_arr).mem) * (__cap));\
+            void *_ptr = (u8 *) malloc(sizeof(ARRAY_TYPEOF(_arr)) * (_cap));                      \
             memcpy(_ptr, (_arr).mem, (_arr).size);                                                \
             free((_arr).mem);                                                                     \
             (_arr).mem = _ptr;                                                                    \
@@ -120,7 +119,7 @@ typedef ARRAY(signed char)   schar_array;
 
 #define ARRAY_INIT(_arr, _init)                                                                   \
     do {                                                                                          \
-        usize __init = _init;                                                        \
+        usize __init = _init;                                                                     \
         ARRAY_NEXT_ALLOC(&__init);                                                                \
                                                                                                   \
         ARRAY_ALLOC(_arr, __init);                                                                \
@@ -150,18 +149,15 @@ typedef ARRAY(signed char)   schar_array;
 
 #define ARRAY_GROWTH_RESIZE(_arr, _cap)                                                           \
     do {                                                                                          \
-        usize __cap = _cap;                                                          \
-                                                                                                  \
-        if (__cap >= (_arr).capacity * ARRAY_REALLOC_FACTOR) {                                    \
-            __cap = (_arr).capacity << 1;                                                         \
-            ARRAY_RESIZE(_arr, __cap);                                                            \
+        if (_cap >= (_arr).capacity * ARRAY_REALLOC_FACTOR) {                                     \
+            ARRAY_RESIZE(_arr, (_arr).capacity << 1);                                             \
         }                                                                                         \
     }                                                                                             \
     while (0)
 
 #define ARRAY_APPEND(_arr, _v)                                                                    \
     do {                                                                                          \
-        usize _size = sizeof(_v) / sizeof(*(_v));                                    \
+        usize _size = sizeof(_v) / sizeof(*(_v));                                                 \
         ARRAY_GROWTH_RESIZE(_arr, (_arr).size + _size - 1);                                       \
         memcpy((_arr).mem + (_arr).size, _v, sizeof(_v));                                         \
         (_arr).size += _size;                                                                     \

@@ -5,44 +5,45 @@
 
 #include "util/camera.h"
 #include "util/defines.h"
-#include "key_event_handler.h"
-#include "util/datastructures/dynamic_array.h"
-#include "util/datastructures/pair.h"
 #include "util/fmt.h"
-#include "model/obj_parser.h"
 
-#define DEFAULT_WIDTH  680
-#define DEFAULT_HEIGHT 480
+#include "key_event_handler.h"
+#include "bvh/bvh.h"
 
-typedef struct SDL_WindowHandle_t {
+typedef struct State_t {
     SDL_Window  *window;
     SDL_Surface *surface;
 
     u32 width;
     u32 height;
 
-    u32 tick;
-} SDL_WindowHandle;
-
-SDL_WindowHandle global_state;
-
-typedef struct State_t {
     Camera *camera;
     f32 deltatime;
+
+    u32 tick;
 } State;
 
-int init(u32 width, u32 height) {
+State global_state;
+
+void move_forward (State *state) { move(state->camera, FORWARD,  state->deltatime); }
+void move_backward(State *state) { move(state->camera, BACKWARD, state->deltatime); }
+void move_left    (State *state) { move(state->camera, LEFT,     state->deltatime); }
+void move_right   (State *state) { move(state->camera, RIGHT,    state->deltatime); }
+void move_up      (State *state) { move(state->camera, UP,       state->deltatime); }
+void move_down    (State *state) { move(state->camera, DOWN,     state->deltatime); }
+
+i32 init(u32 width, u32 height) {
     if (SDL_Init(SDL_INIT_VIDEO | SDL_INIT_TIMER)) {
-        fprintf(stderr, "Error initializing SDL: %s\n", SDL_GetError());
+        LOG("Error initializing SDL: %s\n", SDL_GetError());
         return -1;
     }
 
-    SDL_Window *window =
-            SDL_CreateWindow("Window", SDL_WINDOWPOS_CENTERED, SDL_WINDOWPOS_CENTERED, DEFAULT_WIDTH, DEFAULT_HEIGHT, 0);
+    SDL_Window *window = SDL_CreateWindow(
+            NULL,
+            SDL_WINDOWPOS_CENTERED, SDL_WINDOWPOS_CENTERED, DEFAULT_WIDTH, DEFAULT_HEIGHT, 0);
 
     if (!window) {
-        fprintf(stderr, "Error initializing window: %s\n", SDL_GetError());
-
+        LOG("Error initializing window: %s\n", SDL_GetError());
         SDL_Quit();
         return -1;
     }
@@ -50,59 +51,14 @@ int init(u32 width, u32 height) {
     SDL_Surface *surface = SDL_GetWindowSurface(window);
 
     if (!surface) {
-        fprintf(stderr, "Error initializing surface: %s\n", SDL_GetError());
-
+        LOG("Error initializing surface: %s\n", SDL_GetError());
         SDL_DestroyWindow(window);
         SDL_Quit();
         return -1;
     }
 
-    global_state = (SDL_WindowHandle) {
-            .window  = window,
-            .surface = surface,
-            .width   = width,
-            .height  = height
-    };
-
-    return 0;
-}
-
-// TODO: fuck this - I haven't implemented C "sort of" lambdas YET
-// an alternative could be the GCC extension but this could heavily restrict us
-void move_forward (State *state) { move(state->camera, FORWARD, state->deltatime); }
-void move_backward(State *state) { move(state->camera, BACKWARD, state->deltatime); }
-void move_left    (State *state) { move(state->camera, LEFT, state->deltatime); }
-void move_right   (State *state) { move(state->camera, RIGHT, state->deltatime); }
-void move_up      (State *state) { move(state->camera, UP, state->deltatime); }
-void move_down    (State *state) { move(state->camera, DOWN, state->deltatime); }
-
-i32 polygon_sort(const void *a, const void *b) {
-    const Triangle *_a = *(const Triangle **) a;
-    const Triangle *_b = *(const Triangle **) b;
-
-    f32 a_len = VEC3_SIGN(_a->centroid) * vec3_length(_a->centroid);
-    f32 b_len = VEC3_SIGN(_b->centroid) * vec3_length(_b->centroid);
-
-    if (a_len < b_len) {
-        return -1;
-    }
-
-    if (a_len > b_len) {
-        return 1;
-    }
-
-    return 0;
-}
-
-int main(void) {
-    init(DEFAULT_WIDTH, DEFAULT_HEIGHT);
     key_event_handler_init();
     log_handler_init();
-
-    State state = {
-            .deltatime = 1.0F,
-            .camera = camera_create()
-    };
 
     register_action(REPEAT, SDLK_w, (Function) { move_forward });
     register_action(REPEAT, SDLK_a, (Function) { move_left });
@@ -111,26 +67,25 @@ int main(void) {
     register_action(REPEAT, SDLK_SPACE, (Function) { move_up });
     register_action(REPEAT, SDLK_c, (Function) { move_down });
 
+    global_state = (State) {
+            .window  = window,
+            .surface = surface,
+            .width   = width,
+            .height  = height,
+            .deltatime = 1.0F,
+            .camera = camera_create()
+    };
 
-    TriangleArr arr;
-    if (parse("../model/test/cube.obj", &arr) == -1) {
-        LOG("Obj file parsing failed");
-        LOG("Terminating ...");
-        exit(EXIT_FAILURE);
-    }
+    return 0;
+}
+
+int main(void) {
+    init(DEFAULT_WIDTH, DEFAULT_HEIGHT);
 
     /* TODO */
-    //ARRAY_SORT(arr, polygon_sort);
-    Triangle *entry = NULL;
-    ARRAY_FOREACH(arr, entry) {
-        LOG("%.2f %.2f %.2f", GET_VEC3_X(entry->centroid), GET_VEC3_Y(entry->centroid), GET_VEC3_Z(entry->centroid));
-    }
-
-    vec3f test = VEC3(1.0F, 2.0F, 3.0F);
-    vec3f test1 = VEC3(1.0F, 2.0F, 3.0F);
-    test = vec3_add(test, test1);
-    LOG("%.2f %.2f %.2f", GET_VEC3_X(test), GET_VEC3_Y(test), GET_VEC3_Z(test));
-    exit(-1);
+    // console loader for textures
+    const char *file = "../model/test/spot/spot_quadrangulated.obj";
+    bvh_build(&file, 1);
 
     // rendering
     clock_t timestamp;
@@ -148,24 +103,24 @@ int main(void) {
                 }
                 case SDL_KEYDOWN: {
                     if (event.key.repeat == 0) {
-                        lock_key(event.key.keysym.sym, &state);
+                        lock_key(event.key.keysym.sym, &global_state);
                     }
 
                     break;
                 }
                 case SDL_KEYUP: {
-                    release_key(event.key.keysym.sym, &state);
+                    release_key(event.key.keysym.sym, &global_state);
                     break;
                 }
                 case SDL_MOUSEMOTION: {
-                    rotate(state.camera, (f32) event.motion.x, (f32) event.motion.y);
+                    rotate(global_state.camera, (f32) event.motion.x, (f32) event.motion.y);
                     break;
                 }
             }
         }
 
-        handle_keys(&state);
-        camera_stringify(state.camera);
+        handle_keys(&global_state);
+        camera_stringify(global_state.camera);
         SDL_UpdateWindowSurface(global_state.window);
     }
 

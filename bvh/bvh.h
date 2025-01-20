@@ -98,13 +98,13 @@ typedef struct BVH_AABBs_t {
 typedef struct BVH_Node_t {
 
     // relative offset into a linear buffer containing bvh nodes
-    u32 packed_0;
+    u32 bvh_idx;
 
-    // packed_1 other than packed_0 contains additional packed metadata like the amount
-    // of nodes this node has as children (or triangles).
-    // this information can become relevant for N-ary BVHs where N > 2.
-    // also this packed u32 contains a bit indicating if this bvh node represents a leaf.
-    u32 packed_1;
+    // relative offset into a linear buffer containing triangles
+    u32 tri_idx;
+
+    // containing amount of triangles this aabb encompasses
+    u32 packed;
 
     union {
         BVH_AABBs     aabbs;
@@ -115,17 +115,14 @@ typedef struct BVH_Node_t {
 #define LEAF_MASK (1UL << 3)
 #define NODE_CNT_MASK 7UL
 
-#define GET_LEAF(node) \
-    (!!((node)->packed_1 & LEAF_MASK))
+#define IS_LEAF(_node) \
+    (!!(_node)->packed)
 
-#define SET_LEAF(node) \
-    ((node)->packed_1 |= LEAF_MASK)
+#define GET_NODE_CNT(_node) \
+    ((_node)->packed)
 
-#define GET_NODE_CNT(node) \
-    ((node)->packed_1 & NODE_CNT_MASK)
-
-#define SET_NODE_CNT(node, cnt) \
-    ((node)->packed_1 = ((node)->packed_1 & ~NODE_CNT_MASK) | (cnt & NODE_CNT_MASK)
+#define SET_NODE_CNT(_node, _cnt) \
+    ((_node)->packed = (_cnt))
 
 
 
@@ -174,9 +171,9 @@ typedef struct BVH_Ray_T {
 
 
 
-
-f32 eval_sah_splitplane(const BVH_Node *, u32 axis, f32 pos);
-void ray_child_nodes_intersection(const BVH_Ray *ray, const BVH_Node *node);
+BVH_Node *bvh_build(const char **, usize);
+BVH_Node *bvh_build_fast(const char **, usize);
+f32 bvh_traverse(const BVH_Ray *__restrict__, const BVH_Node *__restrict__, Triangle **);
 
 C_GUARD_END()
 

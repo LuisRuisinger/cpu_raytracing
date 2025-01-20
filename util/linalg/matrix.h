@@ -234,8 +234,8 @@ ALWAYS_INLINE static inline void mat4x4_transpose(
 /* TODO test if the __AVX2__ variant is actually slower */
 ALWAYS_INLINE static inline vec4f mat4x4_mulv(const Mat4x4 *__restrict__ mat, vec4f v) {
 #if defined(__AVX2__)
-    __m256 _tmp_0 = _mm256_set_m128(_mm_set1_ps(GET_VEC4_Y(v)), _mm_set1_ps(GET_VEC4_X(v)));
-    __m256 _tmp_1 = _mm256_set_m128(_mm_set1_ps(GET_VEC4_W(v)), _mm_set1_ps(GET_VEC4_Z(v)));
+    __m256 _tmp_0 = _mm256_set_m128(_mm_set1_ps(VEC4_GET(v, 1)), _mm_set1_ps(VEC4_GET(v, 0)));
+    __m256 _tmp_1 = _mm256_set_m128(_mm_set1_ps(VEC4_GET(v, 3)), _mm_set1_ps(VEC4_GET(v, 2)));
     __m256 _tmp_2 = _mm256_mul_ps(ROW_256(mat, 0), _tmp_0);
     __m256 _tmp_3 = _mm256_mul_ps(ROW_256(mat, 1), _tmp_1);
     __m256 _tmp_4 = _mm256_add_ps(_tmp_2, _tmp_3);

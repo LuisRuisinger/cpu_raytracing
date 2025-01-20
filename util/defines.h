@@ -17,6 +17,8 @@
 C_GUARD_BEGINN()
 
 #define DIMENSIONS 3
+#define DEFAULT_WIDTH  680
+#define DEFAULT_HEIGHT 480
 
 #define MAX(x, y) \
     (((x) > (y)) ? (x) : (y))
@@ -45,6 +47,16 @@ C_GUARD_BEGINN()
         *(_r) =                                                                                   \
             -!!(cast.u & (1 << (MANTISSA_LEN + EXPONENT_LEN))) |                                  \
             !!((u8) (cast.u >> MANTISSA_LEN));                                                    \
+    }                                                                                             \
+    while (0)
+
+#define IS_FLOAT_0(_f, _r)                                                                        \
+    do {                                                                                          \
+        union {                                                                                   \
+            f32 f; u32 u;                                                                         \
+        } cast = { .f = (_r) };                                                                   \
+                                                                                                  \
+        *(_r) = cast.u & ((1 << 31) - 1)                                                          \
     }                                                                                             \
     while (0)
 

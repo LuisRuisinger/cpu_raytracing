@@ -34,6 +34,7 @@ void translate_vec(AABB *aabb, vec3f vec);
 void translate_scalar(AABB *aabb, f32 scalar);
 void aabb_grow_vec(AABB *aabb, vec3f v);
 void aabb_grow_aabb(AABB *aabb, const AABB *other);
+f32 aabb_area(const AABB *aabb);
 
 bool aabb_aabb_intersection(const AABB *a, const AABB *b);
 bool ray_aabb_intersection(const Ray *ray, const AABB *aabb);
