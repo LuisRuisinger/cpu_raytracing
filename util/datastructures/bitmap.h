@@ -104,11 +104,11 @@ ALWAYS_INLINE static inline u32 bitmap_clz(Bitmap *bitmap, u32 cnt) {
     return clz;
 }
 
-#define BITMAP_DEFINE_BINOP(name, op)                                                             \
-    ALWAYS_INLINE static inline void bitmap_##name(                                               \
+#define BITMAP_DEFINE_BINOP(_name, _op)                                                           \
+    ALWAYS_INLINE static inline void bitmap_##_name(                                              \
         Bitmap *dst, const Bitmap *a, const Bitmap *b, u32 cnt) {                                 \
         for (usize i = 0; i < BITMAP_N_DWORDS(cnt); ++i) {                                        \
-            dst[i].dword = a[i].dword op b[i].dword;                                              \
+            dst[i].dword = a[i].dword _op b[i].dword;                                             \
         }                                                                                         \
     }
 
@@ -118,6 +118,14 @@ BITMAP_DEFINE_BINOP(or, |)
 BITMAP_DEFINE_BINOP(nor, | ~)
 BITMAP_DEFINE_BINOP(xor, ^)
 BITMAP_DEFINE_BINOP(nxor, ^ ~)
+
+// comparison
+BITMAP_DEFINE_BINOP(lt, <)
+BITMAP_DEFINE_BINOP(eq, ==)
+BITMAP_DEFINE_BINOP(neq, !=)
+BITMAP_DEFINE_BINOP(gt, >)
+BITMAP_DEFINE_BINOP(le, <=)
+BITMAP_DEFINE_BINOP(ge, >=)
 
 C_GUARD_END()
 

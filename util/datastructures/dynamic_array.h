@@ -128,6 +128,16 @@ typedef ARRAY(signed char)   schar_array;
     }                                                                                             \
     while (0)
 
+#define ARRAY_INIT_EXPLICIT(_arr, _init)                                                          \
+    do {                                                                                          \
+        usize __init = _init;                                                                     \
+        ARRAY_ALLOC(_arr, __init);                                                                \
+                                                                                                  \
+        (_arr).capacity = __init;                                                                 \
+        (_arr).size = 0;                                                                          \
+    }                                                                                             \
+    while (0)
+
 #define ARRAY_CLEAR(_arr) \
     do { (_arr).size = 0; } while (0)
 

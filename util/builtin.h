@@ -50,7 +50,7 @@ typedef ssize_t  ssize;
     #define CPU_RAYTRACING_SSSE3
 
     // src https://stackoverflow.com/a/35270026
-    static f32 _mm_hsum_ps(__m128 _a) {
+    ALWAYS_INLINE static inline f32 _mm_hsum_ps(__m128 _a) {
         __m128 _tmp_0 = _mm_movehdup_ps(_a);
         __m128 _tmp_1 = _mm_add_ps(_a, _tmp_0);
         __m128 _tmp_2 = _mm_movehl_ps(_tmp_0, _tmp_1);

@@ -34,7 +34,7 @@ typedef struct vec4f_t {
     (((u32) _mm_movemask_ps(_mm_cmp_ps((_v).vec, _mm_set1_ps(0.0F), _CMP_LT_OQ))) ? -1 : +1)
 
 #define VEC4_GET(_v, _i)                     \
-    ((__builtin_constant_p(_i) && (_i) == 1) \
+    ((__builtin_constant_p(_i) && (_i) == 0) \
         ? _mm_cvtss_f32((_v).vec)            \
         : _mm_cvtss_f32(_mm_permutevar_ps((_v).vec, _mm_cvtsi32_si128(_i))))
 

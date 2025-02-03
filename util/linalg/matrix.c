@@ -138,7 +138,6 @@ void mat4x4_inverse_t(const Mat4x4 *__restrict__ src, Mat4x4 *__restrict__ dst) 
     ROW_128(dst, 1) = _mm_mul_ps(ROW_128(dst, 1), _tmp_2);
     ROW_128(dst, 2) = _mm_mul_ps(ROW_128(dst, 2), _tmp_2);
 
-
     __m128 _tmp_3 = _mm_shuffle_epi32(_mm_castps_si128(ROW_128(&mat, 0)), _MM_SHUFFLE(0, 0, 0, 0));
     __m128 _tmp_4 = _mm_shuffle_epi32(_mm_castps_si128(ROW_128(&mat, 0)), _MM_SHUFFLE(1, 1, 1, 1));
     __m128 _tmp_5 = _mm_shuffle_epi32(_mm_castps_si128(ROW_128(&mat, 0)), _MM_SHUFFLE(2, 2, 2, 2));
@@ -150,7 +149,6 @@ void mat4x4_inverse_t(const Mat4x4 *__restrict__ src, Mat4x4 *__restrict__ dst) 
     ROW_128(dst, 3) = _mm_add_ps(_mm_add_ps(_tmp_3, _tmp_4), _tmp_5);
     ROW_128(dst, 3) = _mm_sub_ps(_mm_setr_ps(0.0F, 0.0F, 0.0F, 1.0F), ROW_128(dst, 3));
 }
-
 
 
 

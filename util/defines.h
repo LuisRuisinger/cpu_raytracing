@@ -60,12 +60,6 @@ C_GUARD_BEGINN()
     }                                                                                             \
     while (0)
 
-static ALWAYS_INLINE f32 get128_reload(__m128 a, i32 i) {
-    alignas(16) f32 tmp[8];
-    _mm_store_ps(tmp, a);
-    return tmp[i];
-}
-
 C_GUARD_END()
 
 #endif //SOFTWARE_RATYTRACING_DEFINES_H
