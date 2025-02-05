@@ -92,6 +92,13 @@ typedef ARRAY(signed char)   schar_array;
     }                           \
     while (0)
 
+#define ARRAY_SWAP(_a, _b)      \
+    do {                        \  
+        __typeof__(_a) _c = _a; \
+        _a = _b;                \
+        _b = _c;                \
+    } while (0)                 
+
 #ifndef ARRAY_REALLOC_FACTOR
 
     // factor on which the underlying continous space is considered full

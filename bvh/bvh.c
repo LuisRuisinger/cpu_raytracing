@@ -7,6 +7,7 @@
 #include "bvh.h"
 #include "../global.h"
 #include "../model/obj_parser.h"
+#include "../util/morton.h"
 
 #define DEPTH 16
 #define NO_INTERSECTION INFINITY
@@ -85,6 +86,7 @@ ALWAYS_INLINE static inline __m128 ray_node_intersection(
 }
 
 #endif
+
 
 
 
@@ -350,7 +352,7 @@ f32 traverse(const BVH_Ray *__restrict__ ray, const BVH_Node *__restrict__ node,
 
 #elif defined(__AVX2__)
 f32 traverse(const BVH_Ray *__restrict__ ray, const BVH_Node *__restrict__ node, Triangle **hit) {
-    if (__builtin_expect(IS_LEAF(node), 0)) {
+    if (__builtin_expect(!(node->metadata.bvh_cnt), 0)) {
         __m256 _hits = ray_triangle_intersection(ray, node);
 
         /// finding the smallest float and its index
@@ -359,7 +361,7 @@ f32 traverse(const BVH_Ray *__restrict__ ray, const BVH_Node *__restrict__ node,
 
         // retrieving the index of the smallest float
         i32 idx = __builtin_ctz(_mm256_movemask_ps(_tmp_1));
-        *hit = &ARRAY_ELEMENT(triangle_buffer, idx + node->bvh_idx);
+        *hit = &ARRAY_ELEMENT(triangle_buffer, idx + node->metadata.tri_idx);
 
         // the hit distance is broadcast as min value
         return _mm256_cvtss_f32(_tmp_0);
@@ -383,7 +385,7 @@ f32 traverse(const BVH_Ray *__restrict__ ray, const BVH_Node *__restrict__ node,
             _hits = _mm256_blendv_ps(_hits, _mm256_set1_ps(NO_INTERSECTION), _tmp_2);
 
             // relative child node to be traversed
-            BVH_Node *next = &ARRAY_ELEMENT(aabb_buffer, idx + node->bvh_idx);
+            BVH_Node *next = &ARRAY_ELEMENT(aabb_buffer, idx + node->metadata.bvh_idx);
             scale = traverse(ray, next, hit);
         }
 
@@ -398,80 +400,20 @@ f32 traverse(const BVH_Ray *__restrict__ ray, const BVH_Node *__restrict__ node,
 
 #endif
 
-// struct Tri { float3 vertex0, vertex1, vertex2; float3 centroid; };
-// struct Ray { float3 O, D; float t = 1e30f; };
+AABB mesh_aabb;
 
-/*
- * struct BVHNode
-{
-float3 aabbMin, aabbMax;
-uint leftFirst, triCount;
-};
- */
-
-// 0 - - - 4 - - -
-// 0 - 2 - 4 - 6 - // must replace all nodes from step before
-// 0 1 2 3 4 5 6 7 // must replace all nodes from step before
-
-f32 eval_sah_splitplane(const BVH_Node *node, i32 axis, f32 pos) {
-    const vec3f min = VEC3(1E30F);
-    const vec3f max = VEC3(-1E30F);
-
-    AABB left = AABB(min, max);
-    AABB right = AABB(min, max);
-
-    u32 left_cnt = 0;
-    u32 right_cnt = 1;
-
-    for (usize i = 0; i < GET_NODE_CNT(node); ++i) {
-        Triangle *tri = &ARRAY_ELEMENT(/* TODO */ *(ARRAY(Triangle) *) NULL, node->tri_idx + i);
-
-        if (VEC3_GET(tri->centroid, axis) < pos) {
-            ++left_cnt;
-
-            aabb_grow_vec(&left, tri->point[0]);
-            aabb_grow_vec(&left, tri->point[1]);
-            aabb_grow_vec(&left, tri->point[2]);
-        }
-        else {
-            ++right_cnt;
-
-            aabb_grow_vec(&right, tri->point[0]);
-            aabb_grow_vec(&right, tri->point[1]);
-            aabb_grow_vec(&right, tri->point[2]);
-        }
-    }
-
-    f32 cost = (f32) left_cnt * aabb_area(&left) + (f32) right_cnt * aabb_area(&right);
-    return cost > 0.0F ? cost : 1E30F;
-}
-
-i32 polygon_sort(const void *a, const void *b) {
+static i32 polygon_sort(const void *a, const void *b) {
     assert(a);
     assert(b);
 
     const Triangle _a = *(const Triangle *) a;
     const Triangle _b = *(const Triangle *) b;
 
-    f32 a_len = VEC3_SIGN(_a.centroid) * vec3_length(_a.centroid);
-    f32 b_len = VEC3_SIGN(_b.centroid) * vec3_length(_b.centroid);
+    BITMAP(a_morton, 96);
+    BITMAP(b_morton, 96);
 
-    i32 cmp;
-    COMPARATOR_F32(a_len, b_len, &cmp);
-    return cmp;
-}
+    morton3d_f32(_a.centroid, &mesh_aabb, a_morton);
+    morton3d_f32(_b.centroid, &mesh_aabb, b_morton);
 
-BVH_Node *bvh_build(const char **files, usize len) {
-    ARRAY(Triangle) tris;
-    ARRAY_INIT(tris, 1024);
-    
-    // constructs linear buffer of polygons from all obj files
-    for (usize i = 0; i < len; ++i) {
-        if (parse(files[i], (TriangleArr *) &tris) == -1) {
-            continue;
-        }
-    }
-
-    ARRAY_SORT(tris, polygon_sort);
-    return NULL /* TODO */;
+    return morton3d_comparator(a_morton, b_morton);
 }

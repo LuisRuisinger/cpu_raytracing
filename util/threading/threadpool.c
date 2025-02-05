@@ -23,9 +23,11 @@ typedef struct Threadpool_t {
     pthread_cond_t tasks_finished;
 } Threadpool;
 
+static __thread Thread thread_mdata; 
+
 void *threadpool_worker(void *args) {
-    Threadpool *tp  = ((PAIR(Threadpool *, usize) *) args)->p0;
-    const usize thread_id = ((PAIR(Threadpool *, usize) *) args)->p1;
+    Threadpool *tp = ((PAIR(Threadpool *, Thread) *) args)->p0;
+    thread_mdata   = ((PAIR(Threadpool *, Thread) *) args)->p1;
     free(args);
 
     DEBUG_LOG("Worker %d running", pthread_getthreadid_np());
@@ -43,7 +45,7 @@ void *threadpool_worker(void *args) {
 
         for (;;) {
             for (usize i = 0; i < tp->thread_cnt; ++i) {
-                SPMC_Queue *queue = ARRAY_ELEMENT(tp->queues, thread_id + i);
+                SPMC_Queue *queue = ARRAY_ELEMENT(tp->queues, thread_mdata.id + i);
                 
                 if (spmc_queue_try_pop(queue, work)) {
                     atomic_fetch_sub_explicit(&tp->enq_task_cnt, 1, memory_order_relaxed);
@@ -94,11 +96,12 @@ Threadpool *threadpool_create(usize cnt) {
     usize thread_id = 0;
     pthread_t *thread = NULL;
     ARRAY_FOREACH(tp->threads, thread) {
-        PAIR(Threadpool *, usize) *args = malloc(sizeof(*args));
+        PAIR(Threadpool *, Thread) *args = malloc(sizeof(*args));
         args->p0 = tp;
-        args->p1 = thread_id++;
+        args->p1 = (Thread) { .id = thread_id, .thread_cnt = tp->thread_cnt };
 
         pthread_create(thread, NULL, threadpool_worker, args);
+        ++thread_id;
     }
 
     DEBUG_LOG("Threadpool init finished");
@@ -193,4 +196,8 @@ void threadpool_enqueue(Threadpool *tp, thread_fun fun, void *args) {
     
     // retry 
     while (!threadpool_try_schedule(tp, fun, args)); 
+}
+
+const Thread *threadpool_mdata() {
+    return &thread_mdata;
 }

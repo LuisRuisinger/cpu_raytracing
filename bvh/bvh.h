@@ -90,39 +90,36 @@ typedef struct BVH_AABBs_t {
 
 
 
+typedef struct BVH_Meta_t {
+    // relative offset into a linear buffer containing bvh nodes
+    u32 bvh_idx;
+    u32 bvh_cnt;
+
+    // relative offset into a linear buffer containing triangles
+    u32 tri_idx;
+    u32 tri_cnt;
+} __attribute__((packed)) BVH_Meta;
+
+
+
+
+
 /**
  * Representation of a single BVH node.
  * Contains packed SOA representation of 8 aabb's it contains as node or
  * packed SOA representation of 8 triangles in which case it acts as a leaf of the BVH.
  */
 typedef struct BVH_Node_t {
-
-    // relative offset into a linear buffer containing bvh nodes
-    u32 bvh_idx;
-
-    // relative offset into a linear buffer containing triangles
-    u32 tri_idx;
-
-    // containing amount of triangles this aabb encompasses
-    u32 packed;
-
     union {
         BVH_AABBs     aabbs;
         BVH_Triangles triangles;
     };
+
+    BVH_Meta metadata;
 } __attribute__((aligned(SOA_ALIGNMENT))) BVH_Node;
 
 #define LEAF_MASK (1UL << 3)
 #define NODE_CNT_MASK 7UL
-
-#define IS_LEAF(_node) \
-    (!!(_node)->packed)
-
-#define GET_NODE_CNT(_node) \
-    ((_node)->packed)
-
-#define SET_NODE_CNT(_node, _cnt) \
-    ((_node)->packed = (_cnt))
 
 
 
@@ -171,8 +168,7 @@ typedef struct BVH_Ray_T {
 
 
 
-BVH_Node *bvh_build(const char **, usize);
-BVH_Node *bvh_build_fast(const char **, usize);
+
 f32 bvh_traverse(const BVH_Ray *__restrict__, const BVH_Node *__restrict__, Triangle **);
 
 C_GUARD_END()

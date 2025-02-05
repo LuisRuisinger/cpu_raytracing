@@ -6,9 +6,12 @@
 #include "util/camera.h"
 #include "util/defines.h"
 #include "util/fmt.h"
+#include "util/threading/threadpool.h"
 
+#include "model/obj_parser.h"
 #include "key_event_handler.h"
 #include "bvh/bvh.h"
+#include "bvh/bvh_builder.h"
 
 typedef struct State_t {
     SDL_Window  *window;
@@ -79,13 +82,18 @@ i32 init(u32 width, u32 height) {
     return 0;
 }
 
-int main(void) {
-    init(DEFAULT_WIDTH, DEFAULT_HEIGHT);
+i32 main(i32 argc, char **argv) {
+    ARRAY(Triangle) tris;
+    ARRAY_INIT(tris, 1024);
 
-    /* TODO */
-    // console loader for textures
-    const char *file = "../model/test/spot/spot_quadrangulated.obj";
-    bvh_build(&file, 1);
+    for (usize i = 0; i < argc - 1; ++i) {
+        if (parse(argv[i + 1], &tris) == -1) {
+            LOG("Failed to load/parse %s", argv[i + 1]);
+        }
+    }
+
+    bvh_build(&tris);
+    init(DEFAULT_WIDTH, DEFAULT_HEIGHT);
 
     // rendering
     clock_t timestamp;
