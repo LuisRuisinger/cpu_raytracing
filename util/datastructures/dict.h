@@ -42,7 +42,7 @@ C_GUARD_BEGINN()
 #define MAP_INIT(...) \
     GET_MAP_INIT(__VA_ARGS__, MAP_INIT_2, MAP_INIT_1)(__VA_ARGS__)
 
-#define CONTAINS(_map, _key, _res)                                                                \
+#define MAP_CONTAINS(_map, _key, _res)                                                            \
     do {                                                                                          \
         __typeof(_key) *__key = &_key;                                                            \
                                                                                                   \
@@ -56,7 +56,7 @@ C_GUARD_BEGINN()
     }                                                                                             \
     while (0)
 
-#define INSERT(_map, _e, _res)                                                                    \
+#define MAP_INSERT(_map, _e, _res)                                                                \
     do {                                                                                          \
         *res = false;                                                                             \
         bool exists;                                                                              \
@@ -69,7 +69,7 @@ C_GUARD_BEGINN()
     }                                                                                             \
     while (0)
 
-#define GET(_map, _key, _res)                                                                     \
+#define MAP_GET(_map, _key, _res)                                                                 \
     do {                                                                                          \
         __typeof(_key) *__key = &_key;                                                            \
                                                                                                   \

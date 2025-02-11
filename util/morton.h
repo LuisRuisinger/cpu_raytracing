@@ -83,7 +83,7 @@ ALWAYS_INLINE static inline u64 morton_u32(u32 x) {
  * @return 64 bit encoded morton code by interleaving the 3 f32 from the vector.
  */
 ALWAYS_INLINE static inline u64 morton_vec(vec3f v, AABB *aabb) {
-#if defined(__AVX2__)
+#if defined(__AVX2__) && false
 
     // distributing over 21 bits to compress up to 3 dimensions into a single u64
     const u32 bit_mask = (1UL << 21) - 1;
@@ -92,7 +92,10 @@ ALWAYS_INLINE static inline u64 morton_vec(vec3f v, AABB *aabb) {
     // they resolve to vector instructions 
     vec3f d = vec4_sub(aabb->max, aabb->min);
     d = vec4_div(vec4_sub(v, aabb->min), d);
-    d = vec4_mul(d, VEC3((f32) bit_mask));
+    d = vec4_mul(d, VEC4((f32) bit_mask));
+
+    /* TODO */
+    // f32 -> u32 intrinsic cast
 
     __m256 _tmp_0 = encode_avx2(d.vec);
     return 

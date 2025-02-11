@@ -82,6 +82,13 @@ ALWAYS_INLINE static inline vec2f vec2_muls(vec2f a, f32 scalar) {
     };
 }
 
+ALWAYS_INLINE static inline vec2f vec2_div(vec2f a, vec2f b) {
+    return (vec2f) {
+            .x = a.x / b.x,
+            .y = a.y / b.y
+    };
+}
+
 ALWAYS_INLINE static inline vec2f vec2_divs(vec2f a, f32 scalar) {
     return (vec2f) {
             .x = a.x / scalar,

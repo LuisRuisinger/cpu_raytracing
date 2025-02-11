@@ -74,6 +74,13 @@ ALWAYS_INLINE static inline vec3f vec3_muls(vec3f a, f32 scalar) {
     return vec4_muls(a, scalar);
 }
 
+ALWAYS_INLINE static inline vec3f vec3_div(vec3f a, vec3f b) {
+    a = vec4_div(a, b);
+    VEC4_SET(a, 3, 0.0F);
+
+    return a;
+}
+
 ALWAYS_INLINE static inline vec3f vec3_divs(vec3f a, f32 scalar) {
     a = vec4_divs(a, scalar);
     VEC4_SET(a, 3, 0.0F);

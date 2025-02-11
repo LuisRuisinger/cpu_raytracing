@@ -17,8 +17,13 @@ typedef struct Texture_t {
     u8 *data;
 } Texture;
 
+// needed because the presence of a flaot is not guaranteed using an address cast
 #define BITWISE_U32(_type, _t) \
     ((union { u32 u; _type t; }) { .t = _t }.u)
+
+#define BITWISE_TYPE(_type, _u) \
+    ((union { u32 u; _type t; }) { .u = _u }.t)
+
 
 
 /**
@@ -31,16 +36,18 @@ typedef struct Texture_t {
 MAP_FUNC(i32, u32 (* fun)(u32, vec3f)) map;
 
 #define TEXTURE_PEEK(_type) \
-    static _type texture_peek_##_type(u32 tex_id, vec3f v) {                                      \
+    static u32 texture_peek_##_type(u32 tex_id, vec3f v) {                                        \
         Texture *tex = /* TODO */ NULL;                                                           \
                                                                                                   \
         usize entry_size = sizeof(_type);                                                         \
         usize column_len = tex->w * entry_size;                                                   \
         usize texture_len = column_len * tex->h;                                                  \
                                                                                                   \
-        return *(_type *)                                                                         \
+        _type t = *(_type *)                                                                      \
             ((u8 *) tex->data + texture_len * (u32) VEC3_GET(v, 2) +                              \
             column_len * (u32) VEC3_GET(v, 1) +  (u32) (u32) VEC3_GET(v, 0));                     \
+                                                                                                  \
+        return BITWISE_U32(_type, t);                                                             \
     }
 
 TEXTURE_PEEK(u8)
@@ -67,10 +74,14 @@ TEXTURE_PEEK(f32)
                                                                                                   \
         Mat4x4 mat = mat4x4_from_rvec(rows);                                                      \
                                                                                                   \
-        f32 q_ff = (f32) texture_peek_##_type(tex_id, VEC3(x_fr, y_fr, VEC3_GET(v, 2)));          \
-        f32 q_fc = (f32) texture_peek_##_type(tex_id, VEC3(x_fr, y_cl, VEC3_GET(v, 2)));          \
-        f32 q_cf = (f32) texture_peek_##_type(tex_id, VEC3(x_cl, y_fr, VEC3_GET(v, 2)));          \
-        f32 q_cc = (f32) texture_peek_##_type(tex_id, VEC3(x_cl, y_cl, VEC3_GET(v, 2)));          \
+        f32 q_ff = (f32) BITWISE_TYPE(                                                            \
+            _type, texture_peek_##_type(tex_id, VEC3(x_fr, y_fr, VEC3_GET(v, 2))));               \
+        f32 q_fc = (f32) BITWISE_TYPE(                                                            \
+            _type, texture_peek_##_type(tex_id, VEC3(x_fr, y_cl, VEC3_GET(v, 2))));               \
+        f32 q_cf = (f32) BITWISE_TYPE(                                                            \
+            _type, texture_peek_##_type(tex_id, VEC3(x_cl, y_fr, VEC3_GET(v, 2))));               \
+        f32 q_cc = (f32) BITWISE_TYPE(                                                            \
+            _type, texture_peek_##_type(tex_id, VEC3(x_cl, y_cl, VEC3_GET(v, 2))));               \
                                                                                                   \
         vec4f c = VEC4(q_ff, q_fc, q_cf, q_cc);                                                   \
         vec4f w = mat4x4_mulv(&mat, c);                                                           \
@@ -93,7 +104,7 @@ BILINEAR_INTERPOLATION(f32)
 #define NEAREST(_type)                                                                            \
     static u32 nearest_##_type(u32 tex_id, vec3f v) {                                             \
         v = vec3_adds(v, 0.5F);                                                                   \
-        return BITWISE_U32(_type, texture_peek_##_type(tex_id, v));                               \
+        return texture_peek_##_type(tex_id, v);                                                   \
     }
 
 NEAREST(u8)
