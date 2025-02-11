@@ -23,7 +23,14 @@ u32 hardware_concurrency();
 
 #if defined(__APPLE__)
 typedef pthread_mutexattr_t pthread_barrierattr_t;
-typedef struct pthread_barrier pthread_barrier_t; 
+typedef struct pthread_barrier {
+    pthread_mutex_t mutex;
+    pthread_cond_t cond;
+
+    u32 cnt;
+    u32 lft;
+    u32 rnd;
+} pthread_barrier_t; 
 
 i32 pthread_barrier_init(
     pthread_barrier_t *__restrict bar, const pthread_barrierattr_t *__restrict attr, u32 cnt);
