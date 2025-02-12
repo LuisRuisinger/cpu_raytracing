@@ -16,6 +16,7 @@
 
 C_GUARD_BEGINN()
 
+#define BYTE_SIZE 8
 #define DIMENSIONS 3
 #define DEFAULT_WIDTH  680
 #define DEFAULT_HEIGHT 480

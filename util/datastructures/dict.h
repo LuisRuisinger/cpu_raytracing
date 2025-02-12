@@ -86,6 +86,17 @@ C_GUARD_BEGINN()
     }                                                                                             \
     while (0)
 
+#define MAP_SORT_1(_map) \
+    do { ARRAY_SORT((_map).entries, (_map).cmp); } while (0)
+
+#define MAP_SORT_2(_map, _cmp) \
+    do { ARRAY_SORT((_map).entries, (_cmp)); } while (0)
+
+#define GET_MAP_SORT(_1, _2, NAME, ...) NAME
+
+#define MAP_SORT(...) \
+    GET_MAP_SORT(__VA_ARGS__, MAP_SORT_2, MAP_SORT_1)(__VA_ARGS__)
+
 C_GUARD_END()
 
 #endif //SOFTWARE_RATYTRACING_DICT_H

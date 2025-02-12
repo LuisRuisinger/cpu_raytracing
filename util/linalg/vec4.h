@@ -68,6 +68,11 @@ ALWAYS_INLINE static inline vec4f vec4_muls(vec4f a, f32 scalar) {
     return vec4_mul(a, *(vec4f *) &vec_b);
 }
 
+ALWAYS_INLINE static inline vec4f vec4_div(vec4f a, vec4f b) {
+    return (vec4f) { .vec =  _mm_div_ps(a.vec, b.vec) };
+}
+
+
 ALWAYS_INLINE static inline vec4f vec4_divs(vec4f a, f32 scalar) {
     return vec4_muls(a, 1.0F / scalar);
 }

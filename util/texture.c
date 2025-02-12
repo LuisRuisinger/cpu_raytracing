@@ -218,6 +218,7 @@ void texture_setup(void) {
     };
 
     MAP_INIT(map, arr);
+    MAP_SORT(map);
 }
 
 
