@@ -45,22 +45,27 @@ enum {
 
     /* TODO */
     // implement mipmaping
-	SR_NEAREST_MIPMAP_NEAREST,
-	SR_NEAREST_MIPMAP_LINEAR,
-	SR_LINEAR_MIPMAP_NEAREST,
-	SR_LINEAR_MIPMAP_LINEAR,
+	// SR_NEAREST_MIPMAP_NEAREST,
+	// SR_NEAREST_MIPMAP_LINEAR,
+	// SR_LINEAR_MIPMAP_NEAREST,
+	// SR_LINEAR_MIPMAP_LINEAR,
 
     // format
+	// we need to mask the format into the other i32 identifier 
+	// to resolve function pointer at runtime
     SR_RED,
 	SR_RG,
 	SR_RGB,
 	SR_BGR,
 	SR_RGBA,
 	SR_BGRA,
-	SR_COMPRESSED_RED,
-	SR_COMPRESSED_RG,
-	SR_COMPRESSED_RGB,
-	SR_COMPRESSED_RGBA,
+
+	/* TODO */
+	// support
+	// SR_COMPRESSED_RED,
+	// SR_COMPRESSED_RG,
+	// SR_COMPRESSED_RGB,
+	// SR_COMPRESSED_RGBA,
 
     // data types
     // only allow data packable in 32 bits 
@@ -74,10 +79,8 @@ enum {
 	SR_FLOAT,
 };
 
-typedef struct Texture_t Texture;
-
-u32 sample_2d(u32 tex_id, vec2f v);
-u32 sample_3d(u32 tex_id, vec3f v);
+u32 texture_sample(u32 tex_id, vec3f v);
+void texture_setup(void);
 
 C_GUARD_END()
 

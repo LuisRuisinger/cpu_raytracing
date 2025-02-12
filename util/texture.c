@@ -11,8 +11,9 @@ typedef struct Texture_t {
     i32 wrap_t;
     i32 wrap_r;
 
+    i32 tex_type;
     i32 format;
-    i32 type;
+    i32 data_type;
 
     u8 *data;
 } Texture;
@@ -23,8 +24,6 @@ typedef struct Texture_t {
 
 #define BITWISE_TYPE(_type, _u) \
     ((union { u32 u; _type t; }) { .u = _u }.t)
-
-
 
 /**
  * The idea is to store function pointers which get resolved through an i32 identifier.
@@ -58,8 +57,19 @@ TEXTURE_PEEK(i16)
 TEXTURE_PEEK(i32)
 TEXTURE_PEEK(f32)
 
-#define BILINEAR_INTERPOLATION(_type)                                                             \
-    static u32 bilinear_interpolation_##_type(u32 tex_id, vec3f v) {                              \
+#define LINEAR(_type) \
+    static u32 linear_##_type(u32 tex_id, vec3f v) { return 0UL; }
+
+LINEAR(u8)
+LINEAR(u16)
+LINEAR(u32)
+LINEAR(i8)
+LINEAR(i16)
+LINEAR(i32)
+LINEAR(f32)
+
+#define BILINEAR(_type)                                                                           \
+    static u32 bilinear_##_type(u32 tex_id, vec3f v) {                                            \
         u32 x_fr = floor(VEC3_GET(v, 0));                                                         \
         u32 y_fr = floor(VEC3_GET(v, 1));                                                         \
         u32 x_cl = ceil(VEC3_GET(v, 0));                                                          \
@@ -93,13 +103,13 @@ TEXTURE_PEEK(f32)
         return BITWISE_U32(f32, vec4_hsum(c));                                                    \
     }   
 
-BILINEAR_INTERPOLATION(u8)
-BILINEAR_INTERPOLATION(u16)
-BILINEAR_INTERPOLATION(u32)
-BILINEAR_INTERPOLATION(i8)
-BILINEAR_INTERPOLATION(i16)
-BILINEAR_INTERPOLATION(i32)
-BILINEAR_INTERPOLATION(f32)
+BILINEAR(u8)
+BILINEAR(u16)
+BILINEAR(u32)
+BILINEAR(i8)
+BILINEAR(i16)
+BILINEAR(i32)
+BILINEAR(f32)
 
 #define NEAREST(_type)                                                                            \
     static u32 nearest_##_type(u32 tex_id, vec3f v) {                                             \
@@ -119,15 +129,95 @@ vec3f clamp(vec3f v) {
 
 }
 
-u32 sample_2d(u32 tex_id, vec2f v) {
+u32 texture_sample(u32 tex_id, vec3f v) {
     Texture *tex = /* TODO */ NULL;
-    u32 (* fun)(u32, f32, f32) = NULL;
-    
-    MAP_GET(map, tex->wrap_s, fun);
-    v.x = fun(tex_id, v.x, v.y);
 
-    MAP_GET(map, tex->wrap_t, fun);
-    v.y = fun(tex_id, v.x, v.y);
+    u32 mask = tex->tex_type | tex->min_filter | tex->format | tex->data_type;
+    u32 (* fun)(u32, vec3f) = NULL;
+    
+    MAP_GET(map, mask, fun);
+    return fun(tex_id, v);
+}
+
+// masks off entire texture 
+// because every texture and texture parameter is a unique bit 
+// logical AND-ing this mask will result in true as a subset will be always set
+// through this we can match against every type of texture as kind of wildcard
+#define TEXTURE_MASK \
+    (SR_TEXTURE_1D | SR_TEXTURE_1D_ARRAY | SR_TEXTURE_2D | SR_TEXTURE_2D_ARRAY)
+
+// all texture types in 2D space (e.g. 1D texture array)
+#define TEXTURE_MASK_2D \
+    (SR_TEXTURE_1D_ARRAY | SR_TEXTURE_2D)
+
+void texture_setup(void) {
+    MAP_TYPEOF(map) arr[] = {
+
+        // function pointers to nearest
+        { .key = TEXTURE_MASK | SR_NEAREST | SR_RGB  | SR_BYTE,           .fun = nearest_i32 },
+        { .key = TEXTURE_MASK | SR_NEAREST | SR_BGR  | SR_BYTE,           .fun = nearest_i32 },
+        { .key = TEXTURE_MASK | SR_NEAREST | SR_RGBA | SR_BYTE,           .fun = nearest_i32 },
+        { .key = TEXTURE_MASK | SR_NEAREST | SR_BGRA | SR_BYTE,           .fun = nearest_i32 },
+        { .key = TEXTURE_MASK | SR_NEAREST | SR_RG   | SR_BYTE,           .fun = nearest_i16 },
+
+        { .key = TEXTURE_MASK | SR_NEAREST | SR_RGB  | SR_UNSIGNED_BYTE,  .fun = nearest_u32 },
+        { .key = TEXTURE_MASK | SR_NEAREST | SR_BGR  | SR_UNSIGNED_BYTE,  .fun = nearest_u32 },
+        { .key = TEXTURE_MASK | SR_NEAREST | SR_RGBA | SR_UNSIGNED_BYTE,  .fun = nearest_u32 },
+        { .key = TEXTURE_MASK | SR_NEAREST | SR_BGRA | SR_UNSIGNED_BYTE,  .fun = nearest_u32 },
+        { .key = TEXTURE_MASK | SR_NEAREST | SR_RG   | SR_UNSIGNED_BYTE,  .fun = nearest_u16 },
+
+        { .key = TEXTURE_MASK | SR_NEAREST | SR_RED  | SR_BYTE,           .fun = nearest_i8  },
+        { .key = TEXTURE_MASK | SR_NEAREST | SR_RED  | SR_UNSIGNED_BYTE,  .fun = nearest_u8  },
+        { .key = TEXTURE_MASK | SR_NEAREST | SR_RED  | SR_SHORT,          .fun = nearest_i16 },
+        { .key = TEXTURE_MASK | SR_NEAREST | SR_RED  | SR_UNSIGNED_SHORT, .fun = nearest_u16 },
+        { .key = TEXTURE_MASK | SR_NEAREST | SR_RED  | SR_INT,            .fun = nearest_i32 },
+        { .key = TEXTURE_MASK | SR_NEAREST | SR_RED  | SR_UNSIGNED_INT,   .fun = nearest_u32 },
+        { .key = TEXTURE_MASK | SR_NEAREST | SR_RED  | SR_FLOAT,          .fun = nearest_f32 },
+
+        // function pointer to linear interpolation in 1D
+        { .key = SR_TEXTURE_1D | SR_LINEAR | SR_RGB  | SR_BYTE,           .fun = linear_i32 },
+        { .key = SR_TEXTURE_1D | SR_LINEAR | SR_BGR  | SR_BYTE,           .fun = linear_i32 },
+        { .key = SR_TEXTURE_1D | SR_LINEAR | SR_RGBA | SR_BYTE,           .fun = linear_i32 },
+        { .key = SR_TEXTURE_1D | SR_LINEAR | SR_BGRA | SR_BYTE,           .fun = linear_i32 },
+        { .key = SR_TEXTURE_1D | SR_LINEAR | SR_RG   | SR_BYTE,           .fun = linear_i16 },
+
+        { .key = SR_TEXTURE_1D | SR_LINEAR | SR_RGB  | SR_UNSIGNED_BYTE,  .fun = linear_u32 },
+        { .key = SR_TEXTURE_1D | SR_LINEAR | SR_BGR  | SR_UNSIGNED_BYTE,  .fun = linear_u32 },
+        { .key = SR_TEXTURE_1D | SR_LINEAR | SR_RGBA | SR_UNSIGNED_BYTE,  .fun = linear_u32 },
+        { .key = SR_TEXTURE_1D | SR_LINEAR | SR_BGRA | SR_UNSIGNED_BYTE,  .fun = linear_u32 },
+        { .key = SR_TEXTURE_1D | SR_LINEAR | SR_RG   | SR_UNSIGNED_BYTE,  .fun = linear_u16 },
+
+        { .key = SR_TEXTURE_1D | SR_LINEAR | SR_RED  | SR_BYTE,           .fun = linear_i8  },
+        { .key = SR_TEXTURE_1D | SR_LINEAR | SR_RED  | SR_UNSIGNED_BYTE,  .fun = linear_u8  },
+        { .key = SR_TEXTURE_1D | SR_LINEAR | SR_RED  | SR_SHORT,          .fun = linear_i16 },
+        { .key = SR_TEXTURE_1D | SR_LINEAR | SR_RED  | SR_UNSIGNED_SHORT, .fun = linear_u16 },
+        { .key = SR_TEXTURE_1D | SR_LINEAR | SR_RED  | SR_INT,            .fun = linear_i32 },
+        { .key = SR_TEXTURE_1D | SR_LINEAR | SR_RED  | SR_UNSIGNED_INT,   .fun = linear_u32 },
+        { .key = SR_TEXTURE_1D | SR_LINEAR | SR_RED  | SR_FLOAT,          .fun = linear_f32 },
+
+        // function pointer to linear interpolation in 2D
+        { .key = TEXTURE_MASK_2D | SR_LINEAR | SR_RGB  | SR_BYTE,           .fun = bilinear_i32 },
+        { .key = TEXTURE_MASK_2D | SR_LINEAR | SR_BGR  | SR_BYTE,           .fun = bilinear_i32 },
+        { .key = TEXTURE_MASK_2D | SR_LINEAR | SR_RGBA | SR_BYTE,           .fun = bilinear_i32 },
+        { .key = TEXTURE_MASK_2D | SR_LINEAR | SR_BGRA | SR_BYTE,           .fun = bilinear_i32 },
+        { .key = TEXTURE_MASK_2D | SR_LINEAR | SR_RG   | SR_BYTE,           .fun = bilinear_i16 },
+
+        { .key = TEXTURE_MASK_2D | SR_LINEAR | SR_RGB  | SR_UNSIGNED_BYTE,  .fun = bilinear_u32 },
+        { .key = TEXTURE_MASK_2D | SR_LINEAR | SR_BGR  | SR_UNSIGNED_BYTE,  .fun = bilinear_u32 },
+        { .key = TEXTURE_MASK_2D | SR_LINEAR | SR_RGBA | SR_UNSIGNED_BYTE,  .fun = bilinear_u32 },
+        { .key = TEXTURE_MASK_2D | SR_LINEAR | SR_BGRA | SR_UNSIGNED_BYTE,  .fun = bilinear_u32 },
+        { .key = TEXTURE_MASK_2D | SR_LINEAR | SR_RG   | SR_UNSIGNED_BYTE,  .fun = bilinear_u16 },
+
+        { .key = TEXTURE_MASK_2D | SR_LINEAR | SR_RED  | SR_BYTE,           .fun = bilinear_i8  },
+        { .key = TEXTURE_MASK_2D | SR_LINEAR | SR_RED  | SR_UNSIGNED_BYTE,  .fun = bilinear_u8  },
+        { .key = TEXTURE_MASK_2D | SR_LINEAR | SR_RED  | SR_SHORT,          .fun = bilinear_i16 },
+        { .key = TEXTURE_MASK_2D | SR_LINEAR | SR_RED  | SR_UNSIGNED_SHORT, .fun = bilinear_u16 },
+        { .key = TEXTURE_MASK_2D | SR_LINEAR | SR_RED  | SR_INT,            .fun = bilinear_i32 },
+        { .key = TEXTURE_MASK_2D | SR_LINEAR | SR_RED  | SR_UNSIGNED_INT,   .fun = bilinear_u32 },
+        { .key = TEXTURE_MASK_2D | SR_LINEAR | SR_RED  | SR_FLOAT,          .fun = bilinear_f32 },
+    };
+
+    MAP_INIT(map, arr);
 }
 
 

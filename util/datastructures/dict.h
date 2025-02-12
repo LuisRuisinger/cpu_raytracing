@@ -28,6 +28,9 @@ C_GUARD_BEGINN()
         i32 (*cmp) (const void *a, const void *b);                                                \
     }
 
+#define MAP_TYPEOF(_map) \
+    ARRAY_TYPEOF((_map).entries)
+
 #define MAP_INIT_1(_map) \
     do { ARRAY_INIT((_map).entries, 16); } while (0)
 
