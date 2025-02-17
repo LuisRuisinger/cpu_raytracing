@@ -1,3 +1,0 @@
-/Users/luisruisinger/CLionProjects/cpu_raytracing/build/CMakeFiles/cpu_raytracing.dir
-/Users/luisruisinger/CLionProjects/cpu_raytracing/build/CMakeFiles/edit_cache.dir
-/Users/luisruisinger/CLionProjects/cpu_raytracing/build/CMakeFiles/rebuild_cache.dir
