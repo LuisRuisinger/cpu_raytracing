@@ -36,6 +36,15 @@ C_GUARD_BEGINN()
 #define FAST_MOD_POW2(num, mod) \
     ((num) & (mod - 1))
 
+#define RND_POW_2(_n, _p) \
+    (((_n) + (_p) - 1) & ~((_p) - 1))
+
+#define BITWISE_U32(_type, _t) \
+    ((union { u32 u; _type t; }) { .t = _t }.u)
+
+#define BITWISE_TYPE(_type, _u) \
+    ((union { u32 u; _type t; }) { .u = _u }.t)
+
 // IEEE 754
 #define MANTISSA_LEN 23
 #define EXPONENT_LEN 8
