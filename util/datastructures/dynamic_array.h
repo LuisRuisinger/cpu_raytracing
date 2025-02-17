@@ -107,131 +107,136 @@ typedef ARRAY(signed char)   schar_array;
 #endif
 
 #ifndef ARRAY_REALLOC
-    #define ARRAY_REALLOC(_arr, _cap)                                                             \
-        do {                                                                                      \
-                                                                                                  \
-            (_arr).size = MIN(_cap, (_arr).size);                                                 \
-            (_arr).capacity = _cap;                                                               \
-                                                                                                  \
-            void *_ptr = (u8 *) malloc(sizeof(ARRAY_TYPEOF(_arr)) * (_cap));                      \
-            memcpy(_ptr, (_arr).mem, (_arr).size);                                                \
-            free((_arr).mem);                                                                     \
-            (_arr).mem = _ptr;                                                                    \
-        }                                                                                         \
+    #define ARRAY_REALLOC(_arr, _cap)                                                               \
+        do {                                                                                        \
+                                                                                                    \
+            (_arr).size = MIN(_cap, (_arr).size);                                                   \
+            (_arr).capacity = _cap;                                                                 \
+                                                                                                    \
+            void *_ptr = (u8 *) malloc(sizeof(ARRAY_TYPEOF(_arr)) * (_cap));                        \
+            memcpy(_ptr, (_arr).mem, (_arr).size);                                                  \
+            free((_arr).mem);                                                                       \
+            (_arr).mem = _ptr;                                                                      \
+        }                                                                                           \
         while (0)
 #endif
 
 #define ARRAY_NEW() \
     { .mem = NULL, .capacity = 0, .size = 0 }
 
-#define ARRAY_INIT(_arr, _init)                                                                   \
-    do {                                                                                          \
-        usize __init = _init;                                                                     \
-        ARRAY_NEXT_ALLOC(&__init);                                                                \
-                                                                                                  \
-        ARRAY_ALLOC(_arr, __init);                                                                \
-        (_arr).capacity = __init;                                                                 \
-        (_arr).size = 0;                                                                          \
-    }                                                                                             \
+#define ARRAY_INIT(_arr, _init)                                                                     \
+    do {                                                                                            \
+        usize __init = _init;                                                                       \
+        ARRAY_NEXT_ALLOC(&__init);                                                                  \
+                                                                                                    \
+        ARRAY_ALLOC(_arr, __init);                                                                  \
+        (_arr).capacity = __init;                                                                   \
+        (_arr).size = 0;                                                                            \
+    }                                                                                               \
     while (0)
 
-#define ARRAY_INIT_EXPLICIT(_arr, _init)                                                          \
-    do {                                                                                          \
-        usize __init = _init;                                                                     \
-        ARRAY_ALLOC(_arr, __init);                                                                \
-                                                                                                  \
-        (_arr).capacity = __init;                                                                 \
-        (_arr).size = 0;                                                                          \
-    }                                                                                             \
+#define ARRAY_INIT_EXPLICIT(_arr, _init)                                                            \
+    do {                                                                                            \
+        usize __init = _init;                                                                       \
+        ARRAY_ALLOC(_arr, __init);                                                                  \
+                                                                                                    \
+        (_arr).capacity = __init;                                                                   \
+        (_arr).size = 0;                                                                            \
+    }                                                                                               \
     while (0)
 
 #define ARRAY_CLEAR(_arr) \
     do { (_arr).size = 0; } while (0)
 
-#define ARRAY_RESIZE(_arr, _cap)                                                                  \
-    do {                                                                                          \
-        if ((_cap) != (_arr).capacity) {                                                          \
-            ARRAY_REALLOC(_arr, _cap);                                                            \
-        }                                                                                         \
-    }                                                                                             \
+#define ARRAY_RESIZE(_arr, _cap)                                                                    \
+    do {                                                                                            \
+        usize __cap = _cap;                                                                         \
+        ARRAY_NEXT_ALLOC(&__cap);                                                                   \
+                                                                                                    \  
+        if ((__cap) != (_arr).capacity) {                                                           \
+            ARRAY_REALLOC(_arr, __cap);                                                             \
+        }                                                                                           \
+                                                                                                    \        
+        (_arr).size = (_cap);                                                                       \
+    }                                                                                               \
     while (0)
 
-#define ARRAY_RESERVE(_arr, _cap)                                                                 \
-    do {                                                                                          \
-        if ((_cap) > (_arr).capacity) {                                                           \
-            ARRAY_REALLOC(_arr, _cap);                                                            \
-        }                                                                                         \
-    }                                                                                             \
+#define ARRAY_RESERVE(_arr, _cap)                                                                   \
+    do {                                                                                            \
+        if ((_cap) > (_arr).capacity) {                                                             \
+            ARRAY_REALLOC(_arr, _cap);                                                              \
+        }                                                                                           \
+    }                                                                                               \
     while (0)
 
-#define ARRAY_GROWTH_RESIZE(_arr, _cap)                                                           \
-    do {                                                                                          \
-        if (_cap >= (_arr).capacity * ARRAY_REALLOC_FACTOR) {                                     \
-            ARRAY_RESIZE(_arr, (_arr).capacity << 1);                                             \
-        }                                                                                         \
-    }                                                                                             \
+#define ARRAY_GROWTH_RESIZE(_arr, _cap)                                                             \
+    do {                                                                                            \
+        if (_cap >= (_arr).capacity * ARRAY_REALLOC_FACTOR) {                                       \
+            ARRAY_REALLOC(_arr, (_arr).capacity << 1);                                              \
+        }                                                                                           \
+    }                                                                                               \
     while (0)
 
-#define ARRAY_APPEND(_arr, _v)                                                                    \
-    do {                                                                                          \
-        usize _size = sizeof(_v) / sizeof(*(_v));                                                 \
-        ARRAY_GROWTH_RESIZE(_arr, (_arr).size + _size - 1);                                       \
-        memcpy((_arr).mem + (_arr).size, _v, sizeof(_v));                                         \
-        (_arr).size += _size;                                                                     \
-    }                                                                                             \
+#define ARRAY_APPEND(_arr, _v)                                                                      \
+    do {                                                                                            \
+        usize _size = sizeof(_v) / sizeof(*(_v));                                                   \
+        ARRAY_GROWTH_RESIZE(_arr, (_arr).size + _size - 1);                                         \
+        memcpy((_arr).mem + (_arr).size, _v, sizeof(_v));                                           \
+        (_arr).size += _size;                                                                       \
+    }                                                                                               \
     while (0)
 
-#define ARRAY_PREPEND(_arr, _v)                                                                   \
-    do {                                                                                          \
-        usize _size = sizeof(_v) / sizeof(*(_v));                                                 \
-        ARRAY_GROWTH_RESIZE(_arr, (_arr).size + _size - 1);                                       \
-        memmove((_arr).mem + _size, (_arr).mem, (_arr).size);                                     \
-        memcpy((_arr).mem, _v, _size);                                                            \
-        (_arr).size += _size;                                                                     \
-    }                                                                                             \
+#define ARRAY_PREPEND(_arr, _v)                                                                     \
+    do {                                                                                            \
+        usize _size = sizeof(_v) / sizeof(*(_v));                                                   \
+        ARRAY_GROWTH_RESIZE(_arr, (_arr).size + _size - 1);                                         \
+        memmove((_arr).mem + _size, (_arr).mem, (_arr).size);                                       \
+        memcpy((_arr).mem, _v, _size);                                                              \
+        (_arr).size += _size;                                                                       \
+    }                                                                                               \
     while (0)
 
-#define ARRAY_PUSH_BACK(_arr, _v)                                                                 \
-    do {                                                                                          \
-        ARRAY_GROWTH_RESIZE((_arr), (_arr).size);                                                 \
-        ARRAY_ELEMENT((_arr), (_arr).size) = _v;                                                  \
-        ++(_arr).size;                                                                            \
-    }                                                                                             \
+#define ARRAY_PUSH_BACK(_arr, _v)                                                                   \
+    do {                                                                                            \
+        ARRAY_GROWTH_RESIZE((_arr), (_arr).size);                                                   \
+        ARRAY_ELEMENT((_arr), (_arr).size) = _v;                                                    \
+        ++(_arr).size;                                                                              \
+    }                                                                                               \
     while (0)
 
-#define ARRAY_PUSH_BACK_MULTIPLE(_arr, ...)                                                       \
-    do {                                                                                          \
-        __typeof__(*(_arr).mem) __arr[] = { __VA_ARGS__ };                                        \
-        ARRAY_APPEND(_arr, __arr);                                                                \
-    }                                                                                             \
+#define ARRAY_PUSH_BACK_MULTIPLE(_arr, ...)                                                         \
+    do {                                                                                            \
+        __typeof__(*(_arr).mem) __arr[] = { __VA_ARGS__ };                                          \
+        ARRAY_APPEND(_arr, __arr);                                                                  \
+    }                                                                                               \
     while (0)
 
-#define ARRAY_PUSH_FRONT(_arr, _v)                                                                \
-    do {                                                                                          \
-        ARRAY_GROWTH_RESIZE(_arr, (_arr).size);                                                   \
-        memmove((_arr).mem + 1, (_arr).mem, (_arr).size);                                         \
-        ARRAY_ELEMENT(_arr, 0) = _v;                                                              \
-        ++(_arr).size;                                                                            \
-    }                                                                                             \
+#define ARRAY_PUSH_FRONT(_arr, _v)                                                                  \
+    do {                                                                                            \
+        ARRAY_GROWTH_RESIZE(_arr, (_arr).size);                                                     \
+        memmove((_arr).mem + 1, (_arr).mem, (_arr).size);                                           \
+        ARRAY_ELEMENT(_arr, 0) = _v;                                                                \
+        ++(_arr).size;                                                                              \
+    }                                                                                               \
     while (0)
 
-#define ARRAY_PUSH_FRONT_MULTIPLE(_arr, ...)                                                      \
-    do {                                                                                          \
-        __typeof__(*(_arr).mem) __arr[] = { __VA_ARGS__ };                                        \
-        ARRAY_PREPEND(_arr, __arr);                                                               \
-    }                                                                                             \
+#define ARRAY_PUSH_FRONT_MULTIPLE(_arr, ...)                                                        \
+    do {                                                                                            \
+        __typeof__(*(_arr).mem) __arr[] = { __VA_ARGS__ };                                          \
+        ARRAY_PREPEND(_arr, __arr);                                                                 \
+    }                                                                                               \
     while (0)
 
-#define ARRAY_REMOVE(_arr, _i)                                                                    \
-    do {                                                                                          \
-        if ((_i) < (_arr).size - 1) {                                                             \
-            memmove(                                                                              \
-                &ARRAY_ELEMENT(_arr, (_i)), &ARRAY_ELEMENT(_arr, (_i) + 1),                       \
-                ((_arr).size - 1 - (_i)) * sizeof(*(_arr).mem));                                  \
-        }                                                                                         \
-                                                                                                  \
-        --(_arr).size;                                                                            \
-    }                                                                                             \
+#define ARRAY_REMOVE(_arr, _i)                                                                      \
+    do {                                                                                            \
+        if ((_i) < (_arr).size - 1) {                                                               \
+            memmove(                                                                                \
+                &ARRAY_ELEMENT(_arr, (_i)), &ARRAY_ELEMENT(_arr, (_i) + 1),                         \
+                ((_arr).size - 1 - (_i)) * sizeof(*(_arr).mem));                                    \
+        }                                                                                           \
+                                                                                                    \
+        --(_arr).size;                                                                              \
+    }                                                                                               \
     while (0)
 
 #define ARRAY_INSERT(_arr, _i, _v) \

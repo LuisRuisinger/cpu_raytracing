@@ -1,0 +1,8 @@
+[
+{
+  "directory": "/Users/luisruisinger/CLionProjects/cpu_raytracing/cmake-build-debug",
+  "command": "/Library/Developer/CommandLineTools/usr/bin/cc -DCMOCKA_EXPORTS -I/Users/luisruisinger/CLionProjects/cpu_raytracing/cmake-build-debug/_deps/cmocka-build/src -I/Users/luisruisinger/CLionProjects/cpu_raytracing/cmake-build-debug/_deps/cmocka-src/src -I/Users/luisruisinger/CLionProjects/cpu_raytracing/cmake-build-debug/_deps/cmocka-build -I/Users/luisruisinger/CLionProjects/cpu_raytracing/cmake-build-debug/_deps/cmocka-src/include -g -std=gnu17 -isysroot /Library/Developer/CommandLineTools/SDKs/MacOSX15.1.sdk -mmacosx-version-min=14.5 -fPIC -fcolor-diagnostics -std=gnu99 -Wpedantic -Wall -Wshadow -Wmissing-prototypes -Wcast-align -Werror=address -Wstrict-prototypes -Werror=strict-prototypes -Wwrite-strings -Werror=write-strings -Werror-implicit-function-declaration -Wpointer-arith -Werror=pointer-arith -Wdeclaration-after-statement -Werror=declaration-after-statement -Wreturn-type -Werror=return-type -Wuninitialized -Werror=uninitialized -Wimplicit-fallthrough -Werror=strict-overflow -Wstrict-overflow=2 -Wno-format-zero-length -Wmissing-field-initializers -Wformat -Wformat-security -Werror=format-security -fno-common -fstack-protector-strong -fstack-clash-protection -DHAVE_CONFIG_H -o _deps/cmocka-build/src/CMakeFiles/cmocka.dir/cmocka.c.o -c /Users/luisruisinger/CLionProjects/cpu_raytracing/cmake-build-debug/_deps/cmocka-src/src/cmocka.c",
+  "file": "/Users/luisruisinger/CLionProjects/cpu_raytracing/cmake-build-debug/_deps/cmocka-src/src/cmocka.c",
+  "output": "_deps/cmocka-build/src/CMakeFiles/cmocka.dir/cmocka.c.o"
+}
+]

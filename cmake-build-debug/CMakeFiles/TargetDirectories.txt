@@ -1,0 +1,5 @@
+/Users/luisruisinger/CLionProjects/cpu_raytracing/cmake-build-debug/CMakeFiles/cpu_raytracing.dir
+/Users/luisruisinger/CLionProjects/cpu_raytracing/cmake-build-debug/CMakeFiles/package.dir
+/Users/luisruisinger/CLionProjects/cpu_raytracing/cmake-build-debug/CMakeFiles/package_source.dir
+/Users/luisruisinger/CLionProjects/cpu_raytracing/cmake-build-debug/CMakeFiles/edit_cache.dir
+/Users/luisruisinger/CLionProjects/cpu_raytracing/cmake-build-debug/CMakeFiles/rebuild_cache.dir

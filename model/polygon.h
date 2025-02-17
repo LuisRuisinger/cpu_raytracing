@@ -57,13 +57,16 @@ typedef struct Triangle_t {
         Triangle_Color col;
     };
 
-    // 80 bytes
+    /* TODO */
+    // how long is this ????
     // aligned to 32
     vec3f point[3];
     vec3f normal;
     vec3f centroid;
+    f32 self_dot[3];
+    f32 dot[3];
+    f32 denom;
 
-    // 4 bytes + 16 bytes padding
     u32 mask;
 } __attribute__((aligned(ALIGNMENT_256))) Triangle;
 
@@ -82,6 +85,7 @@ typedef ARRAY(Triangle) TriangleArr;
 
 void eval_surface_normal(Triangle *triangle);
 void eval_centroid(Triangle *triangle);
+vec2f triangle_calculate_intersection_2d(Triangle *tri, vec3f hit);
 
 C_GUARD_END()
 

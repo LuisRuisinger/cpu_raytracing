@@ -28,16 +28,12 @@ static i32 polygon_sort(const void *a, const void *b) {
     const Triangle _a = *(const Triangle *) a;
     const Triangle _b = *(const Triangle *) b;
 
-    /* TODO */
-    // either contruct a 128 BITMAP or write SIMD directly for storage and comparision
-    // should give a nice speedup during the initial sort
-    BITMAP(a_morton, 96);
-    BITMAP(b_morton, 96);
+    u64 morton_a = morton_vec(_a.centroid, &mesh_aabb);
+    u64 morton_b = morton_vec(_b.centroid, &mesh_aabb);
 
-    morton3d_f32(_a.centroid, &mesh_aabb, a_morton);
-    morton3d_f32(_b.centroid, &mesh_aabb, b_morton);
-
-    return morton3d_comparator(a_morton, b_morton);
+    if (morton_a > morton_b) return 1;
+    if (morton_a < morton_b) return -1;
+    return 0;
 }
 
 /**
@@ -208,18 +204,17 @@ BVH_Node *bvh_build(void *args) {
     usize end = node_cnt;
     usize prv = end;
 
-    BVH_Build_Node *b_node;
-    ARRAY_FOREACH_SUBRANGE(nodes, b_node, beg, end) {
-        usize i = (usize) b_node - (usize) &ARRAY_ELEMENT(nodes, beg);
+    for (usize i = 0; i < tris->size; ++i) {
+        BVH_Build_Node *b_node = &ARRAY_ELEMENT(nodes, beg + i);
         Triangle *tri = &ARRAY_ELEMENT(*tris, i);
-        
+
         b_node->aabb = AABB(VEC3(INFINITY), VEC3(-INFINITY));
+        b_node->prim_cnt = 1;    
+        b_node->fcp = i; 
+
         aabb_grow_vec(&b_node->aabb, tri->point[0]);
         aabb_grow_vec(&b_node->aabb, tri->point[1]);
         aabb_grow_vec(&b_node->aabb, tri->point[2]); 
-
-        b_node->prim_cnt = 1;    
-        b_node->fcp = i; 
     }
 
     usize thread_cnt = MAX(hardware_concurrency(), 2);
@@ -240,7 +235,7 @@ BVH_Node *bvh_build(void *args) {
     // compress 
     BVH_Node *root = compress(&nodes);
     threadpool_destroy(tp);
-    pthread_barrier_destroy(&barrier);
+    //pthread_barrier_destroy(&barrier);
 
     LOG("finished build");
     return root;

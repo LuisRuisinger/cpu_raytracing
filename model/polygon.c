@@ -36,3 +36,18 @@ void eval_centroid(Triangle *triangle) {
 
     triangle->centroid = vec3_muls(tmp, 0.3333F);
 }
+
+vec3f triangle_calc_barycentric_coords(Triangle *tri, vec3f hit) {
+    vec3f v_0 = vec3_sub(tri->point[1], tri->point[0]);
+    vec3f v_1 = vec3_sub(tri->point[2], tri->point[0]);
+    vec3f v_2 = vec3_sub(hit, tri->point[0]);
+
+    f32 d_20 = vec3_dot(v_2, v_0);
+    f32 d_21 = vec3_dot(v_2, v_1);
+
+    f32 v = (tri->self_dot[1] * d_20 - tri->dot[0] * d_21) / tri->denom;
+    f32 w = (tri->self_dot[0] * d_21 - tri->dot[0] * d_20) / tri->denom;
+    f32 u = 1.0F - v - w;
+
+    return VEC3(u, v, w);
+}

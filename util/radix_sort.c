@@ -87,6 +87,7 @@ void radix_sort_parallel(u8 *__restrict src, u8 *__restrict cpy, usize bit_cnt, 
         }
 
         threadpool_wait(tp);
+        threadpool_clear_work(tp);
 
         usize next_idx = 0;
         for (usize j = 0; j < RADIX_BUFFER_SIZE; ++j) {
@@ -118,6 +119,7 @@ void radix_sort_parallel(u8 *__restrict src, u8 *__restrict cpy, usize bit_cnt, 
         }
 
         threadpool_wait(tp);
+        threadpool_clear_work(tp);
     }
 
     free(mem);

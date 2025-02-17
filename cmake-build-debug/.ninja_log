@@ -1,0 +1,14 @@
+# ninja log v5
+4	533	1736093124508654300	CMakeFiles/cpu_raytracing.dir/util/vec3.c.o	839e20d658528109
+10	1024	1737487436302724411	CMakeFiles/cpu_raytracing.dir/key_event_handler.c.o	6dc268efac54ebfb
+9	1028	1737487436310435783	CMakeFiles/cpu_raytracing.dir/bvh/aabb.c.o	63b7ee5dd95edf60
+10	880	1737487436160998376	CMakeFiles/cpu_raytracing.dir/util/datastructures/bitmap.c.o	fbf1ce651fcbd15c
+9	1249	1737487436352584036	CMakeFiles/cpu_raytracing.dir/bvh/bvh.c.o	48a04355df3d1124
+8	1248	1737487436334551603	CMakeFiles/cpu_raytracing.dir/main.c.o	ee7635c5792e3406
+881	1617	1737487436900696300	CMakeFiles/cpu_raytracing.dir/model/polygon.c.o	45bd8438fb109a7b
+1244	1754	1737487437041561060	CMakeFiles/cpu_raytracing.dir/global.c.o	3d820b80b7b2ac03
+1249	1783	1737487437070972632	CMakeFiles/cpu_raytracing.dir/util/linalg/matrix.c.o	ce347f8fcbd139bd
+10	1247	1737487436306452852	CMakeFiles/cpu_raytracing.dir/util/camera.c.o	72f1fd751bf95acc
+1247	1808	1737487437095274417	CMakeFiles/cpu_raytracing.dir/model/obj_parser.c.o	11102920538b9dc0
+1025	1665	1737487436949701034	CMakeFiles/cpu_raytracing.dir/util/fmt.c.o	6eb63acaaa670e7c
+1808	2029	1737487437314934516	cpu_raytracing	20962fcfe5f9f095

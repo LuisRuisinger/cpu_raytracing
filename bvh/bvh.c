@@ -399,21 +399,3 @@ f32 traverse(const BVH_Ray *__restrict__ ray, const BVH_Node *__restrict__ node,
 }
 
 #endif
-
-AABB mesh_aabb;
-
-static i32 polygon_sort(const void *a, const void *b) {
-    assert(a);
-    assert(b);
-
-    const Triangle _a = *(const Triangle *) a;
-    const Triangle _b = *(const Triangle *) b;
-
-    BITMAP(a_morton, 96);
-    BITMAP(b_morton, 96);
-
-    morton3d_f32(_a.centroid, &mesh_aabb, a_morton);
-    morton3d_f32(_b.centroid, &mesh_aabb, b_morton);
-
-    return morton3d_comparator(a_morton, b_morton);
-}

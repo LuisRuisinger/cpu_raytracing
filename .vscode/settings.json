@@ -1,0 +1,7 @@
+{
+    "files.associations": {
+        "dynamic_array.h": "c",
+        "atomic": "cpp",
+        "queue": "cpp"
+    }
+}

@@ -1,0 +1,382 @@
+- implement raytracing with polygons
+- add keyboard / mouse movement
+- add texture sampling for polygons
+- accelerate through BSP
+- accelerate through SIMD
+- accelerate through threading
+
+mat4x4_inverse:
+        vmovaps xmm1, xmmword ptr [rdi]
+        vmovaps xmm2, xmmword ptr [rdi + 16]
+        vmovaps xmm5, xmmword ptr [rdi + 32]
+        vmovaps xmm6, xmmword ptr [rdi + 48]
+        vmovlhps        xmm4, xmm1, xmm2
+        vunpckhpd       xmm0, xmm1, xmm2
+        vmovaps xmmword ptr [rsp - 40], xmm0
+        vmovlhps        xmm3, xmm5, xmm6
+        vunpckhpd       xmm8, xmm5, xmm6
+        vshufps xmm7, xmm1, xmm5, 136
+        vshufps xmm9, xmm2, xmm6, 221
+        vmulps  xmm7, xmm9, xmm7
+        vshufps xmm9, xmm1, xmm5, 221
+        vshufps xmm10, xmm2, xmm6, 136
+        vmulps  xmm9, xmm9, xmm10
+        vsubps  xmm7, xmm7, xmm9
+        vshufps xmm9, xmm8, xmm8, 51
+        vmulps  xmm9, xmm9, xmm3
+        vshufps xmm10, xmm5, xmm6, 175
+        vmovlhps        xmm11, xmm6, xmm5
+        vmulps  xmm10, xmm10, xmm11
+        vsubps  xmm9, xmm9, xmm10
+        vshufps xmm10, xmm4, xmm4, 51
+        vmulps  xmm10, xmm10, xmm0
+        vshufps xmm11, xmm1, xmm2, 5
+        vunpckhpd       xmm12, xmm2, xmm1
+        vmulps  xmm11, xmm11, xmm12
+        vsubps  xmm10, xmm10, xmm11
+        vshufps xmm11, xmm9, xmm9, 204
+        vmulps  xmm11, xmm11, xmm0
+        vshufps xmm12, xmm1, xmm2, 187
+        vshufps xmm13, xmm9, xmm9, 102
+        vmulps  xmm12, xmm12, xmm13
+        vaddps  xmm11, xmm11, xmm12
+        vshufps xmm12, xmm10, xmm10, 204
+        vmulps  xmm12, xmm12, xmm3
+        vshufps xmm14, xmm5, xmm6, 17
+        vshufps xmm15, xmm10, xmm10, 102
+        vmulps  xmm14, xmm14, xmm15
+        vaddps  xmm12, xmm12, xmm14
+        vshufps xmm14, xmm7, xmm7, 255
+        vmulps  xmm0, xmm14, xmm4
+        vsubps  xmm0, xmm0, xmm11
+        vmovaps xmmword ptr [rsp - 24], xmm0
+        vbroadcastss    xmm11, xmm7
+        vmulps  xmm0, xmm8, xmm11
+        vsubps  xmm0, xmm0, xmm12
+        vshufps xmm12, xmm10, xmm10, 51
+        vmulps  xmm8, xmm8, xmm12
+        vshufps xmm5, xmm5, xmm6, 187
+        vmulps  xmm5, xmm15, xmm5
+        vsubps  xmm5, xmm8, xmm5
+        vshufps xmm6, xmm9, xmm9, 51
+        vmulps  xmm4, xmm4, xmm6
+        vshufps xmm1, xmm1, xmm2, 17
+        vmulps  xmm1, xmm13, xmm1
+        vsubps  xmm1, xmm4, xmm1
+        vshufps xmm2, xmm7, xmm7, 85
+        vmulps  xmm3, xmm3, xmm2
+        vsubps  xmm3, xmm3, xmm5
+        vshufps xmm4, xmm7, xmm7, 170
+        vmulps  xmm5, xmm4, xmmword ptr [rsp - 40]
+        vsubps  xmm1, xmm5, xmm1
+        vshufps xmm5, xmm9, xmm9, 216
+        vmulps  xmm5, xmm10, xmm5
+        vmulps  xmm6, xmm11, xmm14
+        vhaddps xmm5, xmm5, xmm5
+        vmulps  xmm2, xmm2, xmm4
+        vhaddps xmm4, xmm5, xmm5
+        vaddps  xmm2, xmm6, xmm2
+        vsubps  xmm2, xmm2, xmm4
+        vmovaps xmm4, xmmword ptr [rip + .LCPI9_0]
+        vdivps  xmm2, xmm4, xmm2
+        vmulps  xmm4, xmm2, xmmword ptr [rsp - 24]
+        vmulps  xmm3, xmm3, xmm2
+        vmulps  xmm1, xmm1, xmm2
+        vmulps  xmm0, xmm0, xmm2
+        vshufps xmm2, xmm4, xmm3, 119
+        vmovaps xmmword ptr [rsi], xmm2
+        vshufps xmm2, xmm4, xmm3, 34
+        vmovaps xmmword ptr [rsi + 16], xmm2
+        vshufps xmm2, xmm1, xmm0, 119
+        vmovaps xmmword ptr [rsi + 32], xmm2
+        vshufps xmm0, xmm1, xmm0, 34
+        vmovaps xmmword ptr [rsi + 48], xmm0
+        ret
+
+mat4x4_inverse:
+        vmovaps xmm0, xmmword ptr [rdi]
+        vmovaps xmm1, xmmword ptr [rdi + 16]
+        vmovaps xmm5, xmmword ptr [rdi + 32]
+        vmovaps xmm8, xmmword ptr [rdi + 48]
+        vmovlhps        xmm3, xmm0, xmm1
+        vunpckhpd       xmm2, xmm0, xmm1
+        vmovlhps        xmm6, xmm5, xmm8
+        vunpckhpd       xmm9, xmm5, xmm8
+        vshufps xmm4, xmm0, xmm5, 136
+        vshufps xmm7, xmm1, xmm8, 221
+        vmulps  xmm4, xmm4, xmm7
+        vshufps xmm7, xmm0, xmm5, 221
+        vshufps xmm10, xmm1, xmm8, 136
+        vmulps  xmm7, xmm10, xmm7
+        vsubps  xmm7, xmm4, xmm7
+        vshufps xmm4, xmm7, xmm7, 255
+        vshufps xmm10, xmm9, xmm9, 51
+        vmulps  xmm10, xmm10, xmm6
+        vshufps xmm11, xmm5, xmm8, 175
+        vmovlhps        xmm12, xmm8, xmm5
+        vmulps  xmm11, xmm11, xmm12
+        vsubps  xmm10, xmm10, xmm11
+        vshufps xmm11, xmm3, xmm3, 51
+        vmovaps xmmword ptr [rsp - 40], xmm2
+        vmulps  xmm11, xmm11, xmm2
+        vshufps xmm12, xmm0, xmm1, 5
+        vunpckhpd       xmm13, xmm1, xmm0
+        vmulps  xmm12, xmm12, xmm13
+        vsubps  xmm12, xmm11, xmm12
+        vmulps  xmm11, xmm3, xmm4
+        vshufps xmm13, xmm10, xmm10, 204
+        vmulps  xmm13, xmm13, xmm2
+        vshufps xmm14, xmm0, xmm1, 187
+        vshufps xmm15, xmm10, xmm10, 102
+        vmulps  xmm14, xmm14, xmm15
+        vaddps  xmm13, xmm13, xmm14
+        vsubps  xmm2, xmm11, xmm13
+        vmovaps xmmword ptr [rsp - 24], xmm2
+        vshufps xmm13, xmm12, xmm12, 204
+        vmulps  xmm13, xmm13, xmm6
+        vshufps xmm14, xmm5, xmm8, 17
+        vshufps xmm2, xmm12, xmm12, 102
+        vmulps  xmm14, xmm14, xmm2
+        vaddps  xmm13, xmm13, xmm14
+        vbroadcastss    xmm14, xmm7
+        vmulps  xmm11, xmm9, xmm14
+        vsubps  xmm13, xmm11, xmm13
+        vshufps xmm11, xmm12, xmm12, 51
+        vmulps  xmm9, xmm9, xmm11
+        vshufps xmm5, xmm5, xmm8, 187
+        vmulps  xmm2, xmm5, xmm2
+        vsubps  xmm2, xmm9, xmm2
+        vshufps xmm5, xmm7, xmm7, 85
+        vmulps  xmm6, xmm6, xmm5
+        vsubps  xmm2, xmm6, xmm2
+        vshufps xmm6, xmm10, xmm10, 51
+        vmulps  xmm3, xmm3, xmm6
+        vshufps xmm0, xmm0, xmm1, 17
+        vmulps  xmm0, xmm15, xmm0
+        vsubps  xmm0, xmm3, xmm0
+        vshufps xmm1, xmm7, xmm7, 170
+        vmulps  xmm3, xmm1, xmmword ptr [rsp - 40]
+        vsubps  xmm0, xmm3, xmm0
+        vshufps xmm3, xmm10, xmm10, 216
+        vmulps  xmm3, xmm12, xmm3
+        vmulps  xmm4, xmm14, xmm4
+        vhaddps xmm3, xmm3, xmm3
+        vmulps  xmm1, xmm5, xmm1
+        vhaddps xmm3, xmm3, xmm3
+        vaddps  xmm1, xmm4, xmm1
+        vsubps  xmm1, xmm1, xmm3
+        vmovaps xmm3, xmmword ptr [rip + .LCPI9_0]
+        vdivps  xmm1, xmm3, xmm1
+        vmulps  xmm3, xmm1, xmmword ptr [rsp - 24]
+        vmulps  xmm2, xmm2, xmm1
+        vmulps  xmm0, xmm0, xmm1
+        vmulps  xmm1, xmm13, xmm1
+        vshufps xmm4, xmm3, xmm2, 119
+        vmovaps xmmword ptr [rsi], xmm4
+        vshufps xmm2, xmm3, xmm2, 34
+        vmovaps xmmword ptr [rsi + 16], xmm2
+        vshufps xmm2, xmm0, xmm1, 119
+        vmovaps xmmword ptr [rsi + 32], xmm2
+        vshufps xmm0, xmm0, xmm1, 34
+        vmovaps xmmword ptr [rsi + 48], xmm0
+        ret
+
+ mat4x4_mulm:
+         vmovaps xmm0, xmmword ptr [rsi]
+         vmovaps xmm1, xmmword ptr [rsi + 16]
+         vmovaps xmm2, xmmword ptr [rsi + 32]
+         vmovaps xmm3, xmmword ptr [rsi + 48]
+         vmovlhps        xmm4, xmm0, xmm1
+         vunpckhpd       xmm0, xmm0, xmm1
+         vmovlhps        xmm1, xmm2, xmm3
+         vunpckhpd       xmm2, xmm2, xmm3
+         vshufps xmm6, xmm4, xmm1, 136
+         vshufps xmm7, xmm4, xmm1, 221
+         vshufps xmm5, xmm0, xmm2, 136
+         vshufps xmm0, xmm0, xmm2, 221
+         vmovaps xmm1, xmmword ptr [rdi]
+         vmovaps xmm2, xmmword ptr [rdi + 16]
+         vmovaps xmm3, xmmword ptr [rdi + 32]
+         vmovaps xmm4, xmmword ptr [rdi + 48]
+         vmulps  xmm8, xmm6, xmm1
+         vmulps  xmm9, xmm6, xmm2
+         vmulps  xmm10, xmm6, xmm3
+         vmulps  xmm6, xmm6, xmm4
+         vmovshdup       xmm11, xmm6
+         vaddps  xmm6, xmm11, xmm6
+         vmovshdup       xmm11, xmm10
+         vaddps  xmm10, xmm10, xmm11
+         vmovshdup       xmm11, xmm9
+         vaddps  xmm9, xmm9, xmm11
+         vmovshdup       xmm11, xmm8
+         vaddps  xmm8, xmm8, xmm11
+         vunpckhps       xmm11, xmm8, xmm9
+         vunpcklps       xmm8, xmm8, xmm9
+         vmovlhps        xmm8, xmm8, xmm10
+         vblendps        xmm9, xmm10, xmm11, 3
+         vinsertps       xmm9, xmm9, xmm6, 176
+         vinsertps       xmm6, xmm8, xmm6, 48
+         vaddps  xmm6, xmm9, xmm6
+         vmovaps xmmword ptr [rdx], xmm6
+         vmulps  xmm6, xmm7, xmm1
+         vmulps  xmm8, xmm7, xmm2
+         vmulps  xmm9, xmm7, xmm3
+         vmulps  xmm7, xmm7, xmm4
+         vmovshdup       xmm10, xmm7
+         vaddps  xmm7, xmm10, xmm7
+         vmovshdup       xmm10, xmm9
+         vaddps  xmm9, xmm9, xmm10
+         vmovshdup       xmm10, xmm8
+         vaddps  xmm8, xmm8, xmm10
+         vmovshdup       xmm10, xmm6
+         vaddps  xmm6, xmm10, xmm6
+         vunpckhps       xmm10, xmm6, xmm8
+         vunpcklps       xmm6, xmm6, xmm8
+         vmovlhps        xmm6, xmm6, xmm9
+         vblendps        xmm8, xmm9, xmm10, 3
+         vinsertps       xmm8, xmm8, xmm7, 176
+         vinsertps       xmm6, xmm6, xmm7, 48
+         vaddps  xmm6, xmm8, xmm6
+         vmovaps xmmword ptr [rdx + 16], xmm6
+         vmulps  xmm6, xmm5, xmm1
+         vmulps  xmm7, xmm5, xmm2
+         vmulps  xmm8, xmm5, xmm3
+         vmulps  xmm5, xmm5, xmm4
+         vmovshdup       xmm9, xmm5
+         vaddps  xmm5, xmm9, xmm5
+         vmovshdup       xmm9, xmm8
+         vaddps  xmm8, xmm8, xmm9
+         vmovshdup       xmm9, xmm7
+         vaddps  xmm7, xmm9, xmm7
+         vmovshdup       xmm9, xmm6
+         vaddps  xmm6, xmm9, xmm6
+         vunpckhps       xmm9, xmm6, xmm7
+         vunpcklps       xmm6, xmm6, xmm7
+         vmovlhps        xmm6, xmm6, xmm8
+         vblendps        xmm7, xmm8, xmm9, 3
+         vinsertps       xmm7, xmm7, xmm5, 176
+         vinsertps       xmm5, xmm6, xmm5, 48
+         vaddps  xmm5, xmm5, xmm7
+         vmovaps xmmword ptr [rdx + 32], xmm5
+         vmulps  xmm1, xmm0, xmm1
+         vmulps  xmm2, xmm0, xmm2
+         vmulps  xmm3, xmm0, xmm3
+         vmulps  xmm0, xmm0, xmm4
+         vmovshdup       xmm4, xmm0
+         vaddps  xmm0, xmm0, xmm4
+         vmovshdup       xmm4, xmm3
+         vaddps  xmm3, xmm3, xmm4
+         vmovshdup       xmm4, xmm2
+         vaddps  xmm2, xmm2, xmm4
+         vmovshdup       xmm4, xmm1
+         vaddps  xmm1, xmm1, xmm4
+         vunpckhps       xmm4, xmm1, xmm2
+         vunpcklps       xmm1, xmm1, xmm2
+         vmovlhps        xmm1, xmm1, xmm3
+         vblendps        xmm2, xmm3, xmm4, 3
+         vinsertps       xmm2, xmm2, xmm0, 176
+         vinsertps       xmm0, xmm1, xmm0, 48
+         vaddps  xmm0, xmm0, xmm2
+         vmovaps xmmword ptr [rdx + 48], xmm0
+         ret
+
+vs
+
+mat4x4_mulm:
+        vmovaps xmm0, xmmword ptr [rsi]
+        vmovaps xmm1, xmmword ptr [rsi + 16]
+        vmovaps xmm2, xmmword ptr [rsi + 32]
+        vmovaps xmm3, xmmword ptr [rsi + 48]
+        vmovlhps        xmm4, xmm0, xmm1
+        vunpckhpd       xmm0, xmm0, xmm1
+        vmovlhps        xmm1, xmm2, xmm3
+        vunpckhpd       xmm2, xmm2, xmm3
+        vshufps xmm6, xmm4, xmm1, 136
+        vshufps xmm7, xmm4, xmm1, 221
+        vshufps xmm5, xmm0, xmm2, 136
+        vshufps xmm0, xmm0, xmm2, 221
+        vmovaps xmm1, xmmword ptr [rdi]
+        vmovaps xmm2, xmmword ptr [rdi + 16]
+        vmovaps xmm3, xmmword ptr [rdi + 32]
+        vmovaps xmm4, xmmword ptr [rdi + 48]
+        vmulps  xmm8, xmm1, xmm6
+        vmulps  xmm9, xmm2, xmm6
+        vmulps  xmm10, xmm6, xmm3
+        vmulps  xmm6, xmm6, xmm4
+        vmovshdup       xmm11, xmm6
+        vaddps  xmm6, xmm11, xmm6
+        vmovshdup       xmm11, xmm10
+        vaddps  xmm10, xmm10, xmm11
+        vmovshdup       xmm11, xmm9
+        vaddps  xmm9, xmm9, xmm11
+        vmovshdup       xmm11, xmm8
+        vaddps  xmm8, xmm8, xmm11
+        vunpckhps       xmm11, xmm8, xmm9
+        vunpcklps       xmm8, xmm8, xmm9
+        vmovlhps        xmm8, xmm8, xmm10
+        vblendps        xmm9, xmm10, xmm11, 3
+        vinsertps       xmm9, xmm9, xmm6, 176
+        vinsertps       xmm6, xmm8, xmm6, 48
+        vaddps  xmm6, xmm9, xmm6
+        vmovaps xmmword ptr [rdx], xmm6
+        vmulps  xmm6, xmm1, xmm7
+        vmulps  xmm8, xmm2, xmm7
+        vmulps  xmm9, xmm7, xmm3
+        vmulps  xmm7, xmm7, xmm4
+        vmovshdup       xmm10, xmm7
+        vaddps  xmm7, xmm10, xmm7
+        vmovshdup       xmm10, xmm9
+        vaddps  xmm9, xmm9, xmm10
+        vmovshdup       xmm10, xmm8
+        vaddps  xmm8, xmm8, xmm10
+        vmovshdup       xmm10, xmm6
+        vaddps  xmm6, xmm10, xmm6
+        vunpckhps       xmm10, xmm6, xmm8
+        vunpcklps       xmm6, xmm6, xmm8
+        vmovlhps        xmm6, xmm6, xmm9
+        vblendps        xmm8, xmm9, xmm10, 3
+        vinsertps       xmm8, xmm8, xmm7, 176
+        vinsertps       xmm6, xmm6, xmm7, 48
+        vaddps  xmm6, xmm8, xmm6
+        vmovaps xmmword ptr [rdx + 16], xmm6
+        vmulps  xmm6, xmm1, xmm5
+        vmulps  xmm7, xmm2, xmm5
+        vmulps  xmm8, xmm5, xmm3
+        vmulps  xmm5, xmm5, xmm4
+        vmovshdup       xmm9, xmm5
+        vaddps  xmm5, xmm9, xmm5
+        vmovshdup       xmm9, xmm8
+        vaddps  xmm8, xmm8, xmm9
+        vmovshdup       xmm9, xmm7
+        vaddps  xmm7, xmm9, xmm7
+        vmovshdup       xmm9, xmm6
+        vaddps  xmm6, xmm9, xmm6
+        vunpckhps       xmm9, xmm6, xmm7
+        vunpcklps       xmm6, xmm6, xmm7
+        vmovlhps        xmm6, xmm6, xmm8
+        vblendps        xmm7, xmm8, xmm9, 3
+        vinsertps       xmm7, xmm7, xmm5, 176
+        vinsertps       xmm5, xmm6, xmm5, 48
+        vaddps  xmm5, xmm5, xmm7
+        vmovaps xmmword ptr [rdx + 32], xmm5
+        vmulps  xmm1, xmm1, xmm0
+        vmulps  xmm2, xmm2, xmm0
+        vmulps  xmm3, xmm0, xmm3
+        vmulps  xmm0, xmm0, xmm4
+        vmovshdup       xmm4, xmm0
+        vaddps  xmm0, xmm0, xmm4
+        vmovshdup       xmm4, xmm3
+        vaddps  xmm3, xmm3, xmm4
+        vmovshdup       xmm4, xmm2
+        vaddps  xmm2, xmm2, xmm4
+        vmovshdup       xmm4, xmm1
+        vaddps  xmm1, xmm1, xmm4
+        vunpckhps       xmm4, xmm1, xmm2
+        vunpcklps       xmm1, xmm1, xmm2
+        vmovlhps        xmm1, xmm1, xmm3
+        vblendps        xmm2, xmm3, xmm4, 3
+        vinsertps       xmm2, xmm2, xmm0, 176
+        vinsertps       xmm0, xmm1, xmm0, 48
+        vaddps  xmm0, xmm0, xmm2
+        vmovaps xmmword ptr [rdx + 48], xmm0
+        ret
